@@ -13,9 +13,8 @@ Public namespace: `Alxarafe\Arp\Dictionary` (Composer PSR-4).
 Internal helpers are implementation details, not supported extension APIs:
 
 - `Parser` validates JSON syntax/Unicode, walks JSON independently to reject
-  duplicate keys and preserve large integer kinds, and guards restricted YAML
-  before using Symfony YAML with object construction disabled. Extra flow-map
-  checks and scoped deprecation handling close Symfony 7 duplicate-null-key gaps.
+  duplicate keys and preserve exact number kinds, and normalizes portable YAML
+  before using Symfony YAML with object construction disabled. Scalar markers prevent native YAML type coercion; scoped deprecation handling close Symfony 7 duplicate-null-key gaps.
 - `Definition` enforces recognized properties, identity, applicability, numeric
   domains, bounds, length consistency, geometry and ENUM literal consistency.
 - `Number` normalizes decimal strings and compares aligned digits/signs. Exact
@@ -27,7 +26,12 @@ Internal helpers are implementation details, not supported extension APIs:
   scalar values; Base64 must round-trip exactly.
 - `Pattern` implements the formal ASCII grammar and a prefix-sum position-set
   matcher in O(atoms × input bytes), with no host-engine backtracking semantics.
-- `Projection` exports exact JSON numbers for integer metadata.
+- `ExactNumber` retains in-budget fractional source numbers without float conversion;
+  these cannot pass integer metadata validation. `ExactInteger` retains large integers.
+- `Projection` exports both exact representations as JSON Number tokens.
+- Raw numeric token/exponent/magnitude checks precede JSON native decoding; collection
+  nesting checks bound JSON recursion and block/flow-YAML parsing, with full tree-depth
+  validation before definition checks. No process-global parser state is retained.
 - `Failure` carries expected contract rejection codes only. Unrelated exceptions
   are not converted into validation errors.
 

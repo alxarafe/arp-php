@@ -7,7 +7,7 @@ final class Projection
 {
     public static function encode(mixed $value): string
     {
-        if($value instanceof ExactInteger) return (string)$value;
+        if($value instanceof ExactInteger || $value instanceof ExactNumber) return (string)$value;
         if(is_object($value)) {
             $parts=[]; foreach($value as $k=>$v) $parts[]=json_encode((string)$k,JSON_THROW_ON_ERROR).':'.self::encode($v);
             return '{'.implode(',',$parts).'}';
