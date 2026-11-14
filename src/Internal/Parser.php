@@ -11,7 +11,27 @@ final class Parser
         if(preg_match('//u',$bytes)!==1) self::invalid();
         try {
             if($encoding==='json') {
-                json_decode($bytes,false,512,JSON_THROW_ON_ERROR);
+                // Linear lexical preflight avoids regex stack limits on 1 MiB strings.
+                $depth=0; $syntax='';
+                for($p=0,$length=strlen($bytes);$p<$length;) {
+                    $c=$bytes[$p];
+                    if($c==='"') {
+                        $start=$p++;
+                        while($p<$length && $bytes[$p]!=='"') {if($bytes[$p]==='\\') ++$p; ++$p;}
+                        if($p>=$length) self::invalid();
+                        ++$p; $syntax.=substr($bytes,$start,$p-$start); continue;
+                    }
+                    if($c==='-' || ($c>='0' && $c<='9')) {
+                        $start=$p; $p+=strcspn($bytes," \t\r\n,]}:",$p);
+                        $raw=substr($bytes,$start,$p-$start);
+                        if(strlen($raw)>256) throw new Failure('DICTIONARY_LIMIT_EXCEEDED');
+                        self::jsonScalar($raw); $syntax.='"0"'; continue;
+                    }
+                    if($c==='[' || $c==='{') {if(++$depth>128) throw new Failure('DICTIONARY_LIMIT_EXCEEDED');}
+                    elseif($c===']' || $c==='}') --$depth;
+                    $syntax.=$c; ++$p;
+                }
+                json_decode($syntax,false,512,JSON_THROW_ON_ERROR);
                 // A linear second pass detects mapping keys before any can be overwritten.
                 $i=0; $value=self::jsonNode($bytes,$i);
             } elseif($encoding==='yaml') {
@@ -68,75 +88,91 @@ final class Parser
     }
     private static function yamlGuard(string $bytes): array
     {
-        // Restricted subset: block/flow collections and scalars, no block scalar syntax.
-        // Scan outside quotes/comments so forbidden syntax inside literal strings is harmless.
-        $quote=null; $plain=str_repeat(' ',strlen($bytes)); $lineStart=true; $flows=[];
-        for($i=0,$n=strlen($bytes);$i<$n;++$i) {
-            $c=$bytes[$i];
-            if($quote!==null) {
-                if($quote==='"' && $c==='\\') { ++$i; continue; }
-                if($c===$quote) {
-                    if($quote==="'" && ($bytes[$i+1]??'')==="'") {++$i; continue;}
-                    $quote=null;
+        $bytes=str_replace("\r\n","\n",$bytes);
+        if(str_contains($bytes,"\r") || preg_match('/[\x{0085}\x{2028}\x{2029}]/u',$bytes)) self::invalid();
+        $markers=[]; $prefix='__arp_scalar_'; while(str_contains($bytes,$prefix)) $prefix.='_';
+        $out=[]; $blockIndent=null; $plainPrevious=false; $flowDepth=0; $blocks=[];
+        foreach(explode("\n",$bytes) as $line) {
+            preg_match('/^ */',$line,$lead); $indent=strlen($lead[0]);
+            if(($line[$indent]??'')==="\t") self::invalid();
+            if($blockIndent!==null) {
+                if(trim($line)==='' || $indent>$blockIndent) {$out[]=$line; continue;}
+                $blockIndent=null;
+            }
+            $trim=trim($line);
+            if($trim==='' || str_starts_with($trim,'#')) {$out[]=$line; continue;}
+            if($trim==='---' || $trim==='...') {$out[]=$line; $plainPrevious=false; continue;}
+            if($trim[0]==='%') self::invalid();
+            if($plainPrevious && !preg_match('/^(?:-\s|[^:]+:(?:\s|$)|[\]}])/',$trim)) self::invalid();
+            if($flowDepth===0) {
+                $sequence=preg_match('/^-($|\s)/',$trim)===1;
+                $mapping=preg_match('/^[^{}\[\],#]+:(?:\s|$)/',$trim)===1;
+                if($sequence || $mapping) {
+                    while($blocks && $blocks[array_key_last($blocks)]['indent']>$indent) array_pop($blocks);
+                    $kind=$sequence?'sequence':'mapping';
+                    if($blocks && $blocks[array_key_last($blocks)]['indent']===$indent && $blocks[array_key_last($blocks)]['kind']!==$kind) {
+                        if(!$sequence) array_pop($blocks);
+                    }
+                    $top=$blocks? $blocks[array_key_last($blocks)]:null;
+                    if($top===null || $top['indent']!==$indent || $top['kind']!==$kind) $blocks[]=['indent'=>$indent,'kind'=>$kind];
+                    if($sequence && preg_match('/^-(\s+)[^{}\[\],#]+:(?:\s|$)/',$trim,$item)) $blocks[]=['indent'=>$indent+1+strlen($item[1]),'kind'=>'mapping'];
+                    if(count($blocks)>128) throw new Failure('DICTIONARY_LIMIT_EXCEEDED');
                 }
-                continue;
             }
-            if($c==='#' && ($i===0 || ctype_space($bytes[$i-1]))) {
-                while($i<$n && $bytes[$i]!=="\n") ++$i; $c="\n";
-            }
-            if(($c==='"' || $c==="'") && ($i===0 || str_contains(" \t\r\n:[{,-",$bytes[$i-1]))) { $quote=$c; continue; }
-            // Flow maps need their own duplicate check: Symfony 7 silently overwrites
-            // a previous null value here, without even emitting a deprecation.
-            $top=count($flows)-1;
-            if($c==='{' || $c==='[') $flows[]=['kind'=>$c,'start'=>$i+1,'key'=>true,'seen'=>[]];
-            elseif($c==='}' || $c===']') array_pop($flows);
-            elseif($top>=0 && $flows[$top]['kind']==='{') {
-                if($c===',') {$flows[$top]['start']=$i+1; $flows[$top]['key']=true;}
-                elseif($c===':' && $flows[$top]['key']) {
-                    $raw=trim(substr($bytes,$flows[$top]['start'],$i-$flows[$top]['start']));
-                    $key=Yaml::parse($raw,Yaml::PARSE_EXCEPTION_ON_INVALID_TYPE);
-                    if(!is_string($key) && !is_int($key)) self::invalid();
-                    if(isset($flows[$top]['seen'][$key])) self::invalid();
-                    $flows[$top]['seen'][$key]=true; $flows[$top]['key']=false;
+            $result=''; $lastScalar=false;
+            for($i=0,$n=strlen($line);$i<$n;) {
+                $c=$line[$i];
+                if($c==='[' || $c==='{') {if(++$flowDepth+count($blocks)>128) throw new Failure('DICTIONARY_LIMIT_EXCEEDED');}
+                elseif($c===']' || $c==='}') {--$flowDepth; $lastScalar=false;}
+                if(ctype_space($c) || str_contains('[]{},',$c) || ($c==='-' && (($line[$i+1]??'')===' ')) || $c===':') {$result.=$c; ++$i; continue;}
+                if($c==='#') {$result.=substr($line,$i); break;}
+                if(str_contains('&*!%@`',$c) || ($c==='?' && (($line[$i+1]??' ')===' '))) self::invalid();
+                if($c==='|' || $c==='>') {
+                    if(!preg_match('/\A[|>][+-]?(?:\s+#.*)?\s*\z/',substr($line,$i))) self::invalid();
+                    $result.=substr($line,$i); $blockIndent=$indent; $lastScalar=false; break;
                 }
+                $start=$i;
+                if($c==='"' || $c==="'") {
+                    $q=$c; ++$i;
+                    while($i<$n) {
+                        if($line[$i]===$q) {if($q==="'" && ($line[$i+1]??'')==="'") {$i+=2;continue;} ++$i; break;}
+                        if($q==='"' && $line[$i]==='\\') ++$i;
+                        ++$i;
+                    }
+                    if($i>$n || $i-$start<2 || ($line[$i-1]??'')!==$q) self::invalid();
+                    $raw=substr($line,$start,$i-$start);
+                    if($i<$n && !ctype_space($line[$i]) && !str_contains(':,]}#',$line[$i])) self::invalid();
+                    $value=$q==='"'?json_decode($raw,false,512,JSON_THROW_ON_ERROR):str_replace("''","'",substr($raw,1,-1));
+                } else {
+                    while($i<$n && !($flowDepth>0 && str_contains('[]{},',$line[$i])) && !($line[$i]===':' && (($line[$i+1]??' ')===' ')) && !($line[$i]==='#' && ($i===$start || ctype_space($line[$i-1])))) ++$i;
+                    $raw=rtrim(substr($line,$start,$i-$start));
+                    if($raw==='<<' || $raw==='') self::invalid();
+                    $value=match($raw) {'null'=>null,'true'=>true,'false'=>false,default=>preg_match('/\A-?(?:0|[1-9][0-9]*)(?:\.[0-9]+)?(?:[eE][+-]?[0-9]+)?\z/D',$raw)?self::jsonScalar($raw):$raw};
+                }
+                $j=$i; while(($line[$j]??'')===' ') ++$j;
+                $key=($line[$j]??'')===':';
+                if($key) {if(!is_string($value)) self::invalid(); $result.=json_encode($value,JSON_THROW_ON_ERROR); $lastScalar=false;}
+                else {$marker=$prefix.count($markers);$markers[$marker]=$value;$result.="'".$marker."'";$lastScalar=true;}
+                if($c!=='"' && $c!=="'") $result.=substr(substr($line,$start,$i-$start),strlen($raw));
             }
-            if(($c==='&' || $c==='*' || $c==='!') && ($i===0 || str_contains(" \t\r\n:[{,-",$bytes[$i-1]))) self::invalid();
-            if($c==='%' && $lineStart) self::invalid();
-            if(($c==='|' || $c==='>') && ($i===0 || str_contains(" \t:",$bytes[$i-1]))) self::invalid();
-            if($i<$n) $plain[$i]=$c;
-            if($c==="\n") $lineStart=true; elseif($c!==' ' && $c!=="\t" && $c!=="\r") $lineStart=false;
+            $out[]=$result; $plainPrevious=$lastScalar && $flowDepth===0;
         }
-        if(preg_match('/(?:^|[\s{,])<<\s*:/',$plain)) self::invalid();
-        // Symfony's legacy implicit timestamp/octal conversions are outside this subset.
-        // Require quotes for these scalars rather than silently changing their model kind.
-        if(preg_match('/(?:^|[\s\[:,])(?:[0-9]{4}-[0-9]{2}-[0-9]{2}(?:[Tt ][^\s,}\]]+)?|[-+]?0[0-9]+|[-+]?0[oOxX][0-9a-fA-F]+)(?=\s|[,}\]]|$)/',$plain)) self::invalid();
-        // Reject non-core integer spellings; preserve big integers before Symfony
-        // can turn them into strings, keeping quoted and unquoted values distinct.
-        if(preg_match('/(?:^|[\s\[:,])[-+]?[0-9][0-9_]*_[0-9_]*(?=\s|[,}\]]|$)/',$plain)) self::invalid();
-        preg_match_all('/(?:^|[\s\[:,])([-+]?(?:0|[1-9][0-9]*)(?:\.[0-9]+)?(?:[eE][+-]?[0-9]+)?)(?=\s|[,}\]]|$)/',$plain,$numbers,PREG_OFFSET_CAPTURE);
-        $markers=[]; $prefix='__arp_integer_'; while(str_contains($bytes,$prefix)) $prefix.='_';
-        for($i=count($numbers[1])-1;$i>=0;--$i) {
-            [$raw,$position]=$numbers[1][$i]; $value=self::jsonScalar(ltrim($raw,'+'));
-            if($value instanceof ExactInteger || (is_int($value) && strpbrk($raw,'.eE')!==false)) {
-                $marker=$prefix.$i; $markers[$marker]=$value;
-                $bytes=substr_replace($bytes,"'".$marker."'",$position,strlen($raw));
-            }
-        }
-        return [$bytes,$markers];
-
+        return [implode("\n",$out),$markers];
     }
     private static function jsonScalar(string $raw): mixed
     {
         if(!preg_match('/\A(-?)(0|[1-9][0-9]*)(?:\.([0-9]+))?(?:[eE]([+-]?[0-9]+))?\z/D',$raw,$m)) return json_decode($raw,false,512,JSON_THROW_ON_ERROR);
         $fraction=$m[3]??''; $exponent=$m[4]??'0';
-        if(strlen(ltrim($exponent,'+-0'))>4 || abs((int)$exponent)>4096) throw new Failure('DICTIONARY_LIMIT_EXCEEDED');
+        if(strlen($raw)>256 || strlen(ltrim($exponent,'+-0'))>3 || abs((int)$exponent)>128) throw new Failure('DICTIONARY_LIMIT_EXCEEDED');
         $scale=strlen($fraction)-(int)$exponent; $digits=$m[2].$fraction;
+        $significant=ltrim($digits,'0');
+        if($significant!=='' && strlen($significant)-$scale>128) throw new Failure('DICTIONARY_LIMIT_EXCEEDED');
         if($scale>0) {
             if($scale>strlen($digits)) {
-                if(trim($digits,'0')!=='') return json_decode($raw,false,512,JSON_THROW_ON_ERROR);
+                if(trim($digits,'0')!=='') return new ExactNumber($raw);
                 $digits='0';
             } else {
-                if(trim(substr($digits,-$scale),'0')!=='') return json_decode($raw,false,512,JSON_THROW_ON_ERROR);
+                if(trim(substr($digits,-$scale),'0')!=='') return new ExactNumber($raw);
                 $digits=substr($digits,0,strlen($digits)-$scale);
             }
         } elseif($scale<0) $digits.=str_repeat('0',-$scale);
@@ -146,17 +182,22 @@ final class Parser
     }
     private static function restoreIntegers(mixed $value,array $markers): mixed
     {
-        if(is_string($value) && isset($markers[$value])) return $markers[$value];
+        if(is_string($value) && array_key_exists($value,$markers)) return $markers[$value];
         if(is_array($value)) foreach($value as $k=>$v) $value[$k]=self::restoreIntegers($v,$markers);
         elseif($value instanceof \stdClass) foreach($value as $k=>$v) $value->$k=self::restoreIntegers($v,$markers);
         return $value;
     }
-    private static function unicode(mixed $value): void
+    private static function unicode(mixed $value,int $depth=0): void
+    {
+        if(is_array($value) || $value instanceof \stdClass) {++$depth; if($depth>128) throw new Failure('DICTIONARY_LIMIT_EXCEEDED');}
+        self::unicodeNode($value,$depth);
+    }
+    private static function unicodeNode(mixed $value,int $depth): void
     {
         if(is_string($value) && preg_match('//u',$value)!==1) self::invalid();
         if(is_float($value) && !is_finite($value)) self::invalid();
-        if(is_object($value) && !$value instanceof \stdClass && !$value instanceof ExactInteger) self::invalid();
-        if(is_array($value) || is_object($value)) foreach($value as $key=>$v) { self::unicode((string)$key); self::unicode($v); }
+        if(is_object($value) && !$value instanceof \stdClass && !$value instanceof ExactInteger && !$value instanceof ExactNumber) self::invalid();
+        if(is_array($value) || is_object($value)) foreach($value as $key=>$v) { self::unicode((string)$key); self::unicode($v,$depth); }
     }
     private static function invalid(): never { throw new Failure('DICTIONARY_DOCUMENT_INVALID'); }
 }

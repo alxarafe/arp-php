@@ -12,6 +12,21 @@ $dir=$root.'/fixtures/dictionary/v1/';
 /** Preserve deliberately unpaired surrogate test values as invalid UTF-8 PHP strings. */
 function fixture(string $file): mixed {
     $raw=file_get_contents($file);
+    $numbers=[];
+    $raw=preg_replace_callback('/"(?:[^"\\\\]|\\\\.)*"|(-?(?:0|[1-9][0-9]*)(?:\.[0-9]+)?(?:[eE][+-]?[0-9]+)?)/s',function($m) use (&$numbers) {
+        if(!isset($m[1]) || $m[1]==='') return $m[0];
+        $key='__fixture_number_'.count($numbers);$numbers[$key]=$m[1];return json_encode($key);
+    },$raw);
+    $numericRestore=function($v) use (&$numericRestore,$numbers) {
+        if(is_string($v) && isset($numbers[$v])) {
+            $raw=$numbers[$v];
+            if(preg_match('/^-?(?:0|[1-9][0-9]*)$/D',$raw)) return new \Alxarafe\Arp\Dictionary\ExactInteger($raw);
+            return new \Alxarafe\Arp\Dictionary\Internal\ExactNumber($raw);
+        }
+        if(is_array($v)) return array_map($numericRestore,$v);
+        if(is_object($v)) foreach($v as $k=>$x) $v->$k=$numericRestore($x);
+        return $v;
+    };
     if(str_contains($raw,'\\ud800')) {
         if(str_contains($raw,'\\ue000') || str_contains($raw,"\xee\x80\x80")) throw new RuntimeException('Sentinel collision');
         $raw=str_replace('\\ud800','\\ue000',$raw);
@@ -21,11 +36,18 @@ function fixture(string $file): mixed {
             if(is_object($v)) foreach($v as $k=>$x) $v->$k=$restore($x);
             return $v;
         };
-        return $restore(json_decode($raw,false,512,JSON_THROW_ON_ERROR));
+        return $numericRestore($restore(json_decode($raw,false,512,JSON_THROW_ON_ERROR)));
     }
-    return json_decode($raw,false,512,JSON_THROW_ON_ERROR);
+    return $numericRestore(json_decode($raw,false,512,JSON_THROW_ON_ERROR));
 }
 function canonical(mixed $v): mixed {
+    if(is_int($v) || is_float($v) || $v instanceof \Alxarafe\Arp\Dictionary\ExactInteger || $v instanceof \Alxarafe\Arp\Dictionary\Internal\ExactNumber) {
+        $raw=(string)$v; preg_match('/^(-?)([0-9]+)(?:\.([0-9]+))?(?:[eE]([+-]?[0-9]+))?$/D',$raw,$m);
+        $fraction=$m[3]??''; $digits=ltrim($m[2].$fraction,'0');$scale=strlen($fraction)-(int)($m[4]??0);
+        if($digits==='') return ['number','0'];
+        $trimmed=rtrim($digits,'0');$scale-=strlen($digits)-strlen($trimmed);
+        return ['number',$m[1].$trimmed.'e'.(-$scale)];
+    }
     if(is_object($v)) { $a=(array)$v; ksort($a); return ['object',array_map('canonical',$a)]; }
     if(is_array($v)) {if(!array_is_list($v)) {ksort($v); return ['object',array_map('canonical',$v)];} return ['array',array_map('canonical',$v)];}
     return $v;
@@ -50,7 +72,7 @@ function outcome(array $actual,object $expected): array {
 $builder=new CatalogBuilder();
 function build(object $document): \Alxarafe\Arp\Dictionary\BuildResult {
     global $builder;
-    return $builder->buildCatalog([new Source('fixture','memory','json',json_encode($document,JSON_THROW_ON_ERROR))]);
+    return $builder->buildCatalog([new Source('fixture','memory','json',\Alxarafe\Arp\Dictionary\Internal\Projection::encode($document))]);
 }
 $manifest=fixture($dir.'manifest.json');
 $base=build(fixture($dir.$manifest->sets->catalog));
@@ -66,6 +88,7 @@ foreach(fixture($dir.$manifest->sets->definitions) as $v) {
 foreach(fixture($dir.$manifest->sets->sources) as $v) {
     $r=$builder->buildCatalog([new Source('fixture',$v->id,$v->encoding,file_get_contents($root.'/'.$v->path))]);
     check('sources',$v->id,outcome($r->jsonSerialize(),$v->expected),$v->expected);
+    if(isset($v->descriptorProjection)) check('source-descriptors',$v->id,$r->catalog?->resolve($v->descriptorProjection->id)['descriptor']??null,$v->descriptorProjection);
 }
 foreach(fixture($dir.$manifest->sets->patterns) as $v) {
     $r=build((object)['apiVersion'=>$manifest->apiVersion,'elements'=>[(object)['id'=>'fixture.pattern','type'=>'STRING','constraints'=>(object)['pattern'=>$v->pattern]]]]);
@@ -78,7 +101,7 @@ foreach(fixture($dir.$manifest->sets->catalogs) as $scenario) {
     foreach($scenario->steps as $i=>$step) {
         $ctx=$step->context; $name=$scenario->id.'/'.$i;
         if($step->operation==='buildCatalog') {
-            $sources=array_map(fn($s)=>new Source($s->providerId,$s->sourceId,'json',json_encode($s->document,JSON_THROW_ON_ERROR)),$step->sources);
+            $sources=array_map(fn($s)=>new Source($s->providerId,$s->sourceId,'json',\Alxarafe\Arp\Dictionary\Internal\Projection::encode($s->document)),$step->sources);
             $last[$ctx]=$builder->buildCatalog($sources);
             if($last[$ctx]->isValid()) $contexts[$ctx]=$last[$ctx]->catalog;
             check('catalog-steps',$name,outcome($last[$ctx]->jsonSerialize(),$step->expected),$step->expected);

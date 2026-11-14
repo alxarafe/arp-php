@@ -69,25 +69,29 @@ Accepted encodings are explicitly `json` and `yaml`. UTF-8, a single root object
 closed document/element shapes and duplicate-key rejection are enforced before
 publication. Numeric constraint strings must be quoted in either encoding.
 
-YAML supports block and flow maps/sequences, plain, single-quoted and double-quoted
-scalars and comments. It rejects tags, directives, anchors, aliases, merge keys,
-multiple documents and invalid Unicode. Block scalar syntax (`|`, `>`) and implicit
-timestamp/legacy numeric spellings are outside this restricted subset: quote
-such textual values. YAML 1.1 boolean words `yes/no/on/off` remain strings.
-The subset is intentionally disclosed; the contract does not prescribe a complete
-YAML grammar. Unsupported syntax is rejected, never interpreted as executable code.
+YAML implements the mandatory ARP portable profile: block/flow maps and sequences,
+one-line plain/single/double quoted scalars, JSON-compatible double-quote escapes,
+and literal/folded blocks (`|`, `>`, clip/strip/keep, inferred indentation).
+Only lowercase `null`, `true`, `false` and JSON numeric lexemes resolve implicitly;
+dates, `yes/no/on/off`, `012`, `+1` and other plain spellings stay text. Tags,
+directives, aliases, anchors, merges, duplicate keys, multiline plain/quoted scalars,
+YAML-only escapes and explicit block indentation indicators are rejected.
 
-Default limits: **1 MiB per source, 2048 elements per source**. Override using
+Default limits: **1 MiB per source, 2048 elements per source, collection depth128**
+(root collection is level1). Byte/element limits can be customized with
 `new CatalogBuilder(maxDocumentBytes: ..., maxElementsPerSource: ...)`.
-The contract's 4096 numeric digit, 512 pattern character and 4096 pattern input
-code-point ceilings apply independently. Source numeric exponent expansion is
-limited to magnitude 4096. Resource/programming exceptions propagate; only
-recognized contract failures become dictionary issues.
+Source number tokens are limited to256 ASCII characters, absolute exponent128 and
+absolute magnitude strictly below10^128, before native numeric conversion.
+Admitted numbers retain mathematical precision and JSON Number kind. Numeric
+constraint strings retain their independent4096-digit limit, as do the existing
+512-character pattern and4096-code-point pattern-input ceilings.
+Resource violations return `DICTIONARY_LIMIT_EXCEEDED`; unsupported syntax returns
+`DICTIONARY_DOCUMENT_INVALID`.
 
 ## Reproduce acceptance tests
 
-The exact main commit after PR #4 is recorded in `contract.ref`:
-`0172ab64742218b9f64a6ae96c43ebdfe690f4c6`. No contract release tag exists yet.
+The consolidated contract commit is recorded in `contract.ref`:
+`2dde1a09780e29c7385606c5e018fa75a0808b68`. No contract release tag exists yet.
 Tests read its original manifest and fixtures directly; expected outcomes are
 not copied into this repository. The runner rejects a different SHA or edited
 contract inputs. A deliberately unpaired surrogate fixture is represented as

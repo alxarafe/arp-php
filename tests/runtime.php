@@ -61,8 +61,8 @@ test('YAML literal forbidden symbols stay literal',function() use($builder) {
     $yaml="apiVersion: arp.dictionary/v1\nelements:\n  - id: test.x\n    type: STRING\n    label: '!*& <<: % ---'\n    description: \"!php/object a\"\n";
     expect($builder->buildCatalog([new Source('p','s','yaml',$yaml)])->isValid());
 });
-test('YAML forbidden constructs and ambiguous scalars rejected',function() {
-    foreach(["a: &a b\n",'a: !php/object x','a: !!str x',"a: 1\n---\nb: 2",'%YAML 1.2', 'a: {<<: {b: 1}}','a: 012','a: 0xFF','a: 1_000','a: 2024-01-01',"a: |\n  text"] as $bytes) reject($bytes);
+test('YAML forbidden constructs rejected',function() {
+    foreach(["a: &a b\n",'a: !php/object x','a: !!str x',"a: 1\n---\nb: 2",'%YAML 1.2', 'a: {<<: {b: 1}}'] as $bytes) reject($bytes);
 });
 test('YAML 1.1 boolean words are strings',function() use($builder) {
     $r=$builder->buildCatalog([new Source('p','s','yaml',"apiVersion: arp.dictionary/v1\nelements: [{id: test.x, type: ENUM, enumValues: [yes, no, on, off]}]")]);
@@ -104,5 +104,50 @@ test('value validation without filesystem or network wrappers',function() use($c
     $wrappers=stream_get_wrappers(); foreach($wrappers as $w) stream_wrapper_unregister($w);
     try {expect($catalog->validate('test.x','a')['valid']); expect(!$catalog->validate('test.x','other')['valid']);}
     finally {foreach($wrappers as $w) stream_wrapper_restore($w);}
+});
+
+test('portable numeric source boundaries and exact fractions',function() use($builder) {
+    foreach(['json','yaml'] as $encoding) foreach(['0e129','0e-129','0e0000000129','1e128','-1e128','1.'.str_repeat('0',255)] as $number) {
+        $bytes=$encoding==='json'?'{"n":'.$number.'}':'n: '.$number;
+        $r=$builder->buildCatalog([new Source('p','s',$encoding,$bytes)]);
+        expect(!$r->isValid() && $r->issues[0]['code']==='DICTIONARY_LIMIT_EXCEEDED');
+    }
+    foreach(['0e128','0e-128','0e0000000128','9.9e127','1e-128'] as $number) {
+        $value=\Alxarafe\Arp\Dictionary\Internal\Parser::parse('{"n":'.$number.'}','json')->n;
+        expect(!is_float($value));
+    }
+});
+test('portable YAML strings and block chomping',function() {
+    $parser=\Alxarafe\Arp\Dictionary\Internal\Parser::class;
+    foreach(['012','+1','2026-11-14','True','~','0xFF','1_000'] as $text) expect($parser::parse('a: '.$text,'yaml')->a===$text);
+    foreach(["|-"=>"first", "|"=>"first\n", "|+"=>"first\n\n", ">-"=>"first second"] as $header=>$expected) {
+        $body=$header==='>-'?"  first\n  second\n":"  first\n\n";
+        expect($parser::parse("a: ".$header."\n".$body,'yaml')->a===$expected);
+    }
+    foreach(['a: "\\x41"','a: "\\U0001F600"',"a: \"first\n second\"", "a: first\n  second", "a: |2\n  x"] as $bytes) reject($bytes);
+});
+test('interleaved independent catalog construction and validation',function() {
+    $fibers=[];
+    foreach(range(1,8) as $n) $fibers[]=new Fiber(function() use($n) {
+        $r=(new CatalogBuilder())->buildCatalog([new Source('p','s','json',json_encode(['apiVersion'=>'arp.dictionary/v1','elements'=>[['id'=>'test.fiber','type'=>'ENUM','enumValues'=>[(string)$n]]]]))]);
+        Fiber::suspend();
+        expect($r->catalog->validate('test.fiber',(string)$n)['valid']);
+        expect(!$r->catalog->validate('test.fiber',(string)($n+1))['valid']);
+    });
+    foreach($fibers as $fiber) $fiber->start();
+    foreach(array_reverse($fibers) as $fiber) $fiber->resume();
+});
+test('YAML string keys block plain punctuation and preparse depth',function() {
+    $parser=\Alxarafe\Arp\Dictionary\Internal\Parser::class;
+    foreach(['true','false','null','1','1.00'] as $key) reject($key.': text');
+    reject("description: contains [brackets]\n  continuation");
+    expect($parser::parse("elements:\n-    id: x\n     type: STRING",'yaml')->elements[0]->id==='x');
+    expect($parser::parse('description: contains [brackets], commas {braces} ! & *','yaml')->description==='contains [brackets], commas {braces} ! & *');
+    foreach([127,128] as $depth) {
+        $yaml='';for($i=0;$i<$depth;$i++) $yaml.=str_repeat(' ',$i).'a:'."\n";
+        $yaml.=str_repeat(' ',$depth).'leaf: value';
+        if($depth===127) expect(is_object($parser::parse($yaml,'yaml')));
+        else {try {$parser::parse($yaml,'yaml');throw new RuntimeException('Depth accepted');} catch(Failure $e) {expect($e->errorCode==='DICTIONARY_LIMIT_EXCEEDED');}}
+    }
 });
 echo "$count runtime tests passed, 0 failed\n";
