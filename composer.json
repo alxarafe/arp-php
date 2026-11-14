@@ -1,0 +1,24 @@
+{
+  "name": "alxarafe/arp-php",
+  "description": "Infrastructure-independent ARP scalar dictionary",
+  "type": "library",
+  "license": "Apache-2.0",
+  "require": {
+    "php": ">=8.2",
+    "symfony/yaml": "^7.4"
+  },
+  "autoload": {
+    "psr-4": {
+      "Alxarafe\\Arp\\Dictionary\\": "src/"
+    }
+  },
+  "scripts": {
+    "test": [
+      "@test:conformance",
+      "@test:runtime"
+    ],
+    "test:conformance": "@php tests/conformance.php",
+    "test:runtime": "@php tests/runtime.php",
+    "test:structure": "bash tests/structure.sh"
+  }
+}
