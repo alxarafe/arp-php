@@ -129,7 +129,10 @@ final class Parser
                 if(str_contains('&*!%@`',$c) || ($c==='?' && (($line[$i+1]??' ')===' '))) self::invalid();
                 if($c==='|' || $c==='>') {
                     if(!preg_match('/\A[|>][+-]?(?:\s+#.*)?\s*\z/',substr($line,$i))) self::invalid();
-                    $result.=substr($line,$i); $blockIndent=$indent; $lastScalar=false; break;
+                    // A compact sequence mapping starts after '- ', not at the dash.
+                    // Its following sibling fields must still pass the portable resolver.
+                    $blockIndent=$blocks?max($indent,$blocks[array_key_last($blocks)]['indent']):$indent;
+                    $result.=substr($line,$i); $lastScalar=false; break;
                 }
                 $start=$i;
                 if($c==='"' || $c==="'") {

@@ -150,4 +150,20 @@ test('YAML string keys block plain punctuation and preparse depth',function() {
         else {try {$parser::parse($yaml,'yaml');throw new RuntimeException('Depth accepted');} catch(Failure $e) {expect($e->errorCode==='DICTIONARY_LIMIT_EXCEEDED');}}
     }
 });
+test('YAML compact mapping block terminates before sibling fields',function() use($builder) {
+    $parser=\Alxarafe\Arp\Dictionary\Internal\Parser::class;
+    foreach(['|','>-'] as $style) foreach([1,4] as $spacing) {
+        $sibling=str_repeat(' ',3+$spacing);
+        $yaml="apiVersion: arp.dictionary/v1\nelements:\n  -".str_repeat(' ',$spacing)."description: ".$style."\n".$sibling."  text\n".$sibling."id: test.x\n".$sibling."type: STRING\n".$sibling."label: 2025-01-01\n";
+        $r=$builder->buildCatalog([new Source('p','s','yaml',$yaml)]);
+        expect($r->isValid());
+        $descriptor=$r->catalog->resolve('test.x')['descriptor'];
+        expect($descriptor->label==='2025-01-01');
+        expect($descriptor->description===($style==='|'?"text\n":'text'));
+        reject(str_replace('label: 2025-01-01','label: &anchor text',$yaml));
+        reject(str_replace('label: 2025-01-01','label: 0e129',$yaml),'DICTIONARY_LIMIT_EXCEEDED');
+        $model=$parser::parse(str_replace('label: 2025-01-01','label: true',$yaml),'yaml');
+        expect($model->elements[0]->label===true);
+    }
+});
 echo "$count runtime tests passed, 0 failed\n";

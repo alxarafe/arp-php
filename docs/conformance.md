@@ -1,5 +1,42 @@
 # ARP-DICT-001-RUNTIME-002 PHP acceptance evidence
 
+## Revalidation and compact-block correction — 2026-11-15
+
+Updated `main` from origin at `3799020` before this work. The requested branch
+already existed at `0fef047` with identical files but a different history after
+the upstream squash. It was preserved as
+`archive/arp-dict-001-portability-002-0fef047`; the requested feature branch was
+created from updated `main`. No merge, publication or history deletion was used.
+
+The existing consolidated implementation already passed all **327 shared checks**.
+Review found one additional YAML defect: when a compact sequence mapping begins
+with a block scalar (`- description: |`), its sibling fields were treated as block
+content by the lexical guard. Symfony then resolved those fields natively; for
+example a following plain date label no longer remained text. The block boundary
+now uses the mapping's indentation rather than the sequence dash's indentation.
+The new regression covers literal/folded blocks, two compact spacing variants,
+exact text projections, boolean kinds, forbidden anchors and numeric limits.
+Public APIs, dependencies and exact arithmetic are unchanged.
+
+Current verification supersedes the historical environment/counts below:
+
+- PHP 8.5.11: **327/327 shared**, **25/25 runtime groups**, zero failures/skips.
+- PHP 8.4.26: **327/327 shared**, **25/25 runtime groups**, zero failures/skips.
+- `bash tests/structure.sh`: schema/fixture integrity PASS, inventory 327;
+  independent checker regressions **27/27 PASS** at the pinned contract commit.
+- PHP lint of every source/test file and `git diff --check`: PASS.
+- `php8.3 /usr/bin/composer validate --strict` and `check-platform-reqs`: PASS.
+  The system Composer under default PHP 8.5 fails because that CLI lacks
+  `Normalizer`; running the same installed Composer under PHP 8.3 resolves the
+  tooling issue without changing the library or its dependencies.
+
+Files changed in this follow-up: `src/Internal/Parser.php`, `tests/runtime.php`,
+`docs/conformance.md`. The contract remains pinned to
+`2dde1a09780e29c7385606c5e018fa75a0808b68`; its inputs and expectations were not
+modified. No other runtime implementation was consulted.
+
+## Historical consolidated implementation evidence
+
 Date: 2026-11-14. Branch: `feature/arp-dict-001-portability-002`.
 Authoritative contract: `2dde1a09780e29c7385606c5e018fa75a0808b68`, recorded in
 `contract.ref`. No release or publication is claimed.
