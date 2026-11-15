@@ -4,7 +4,7 @@ Standalone Composer library implementing the approved, unpublished ARP-DICT-001
 candidate (`arp.dictionary/v1`), with all 17 scalar types. No ERP, web framework,
 HTTP, SQL, ORM or persistence is required.
 
-PHP 8.2+ syntax; development and acceptance runs use **PHP 8.5**. The only direct
+**PHP 8.5 is the minimum supported version**, with no upper-version restriction in Composer. PHP 8.4 and earlier are unsupported. Development and acceptance target PHP 8.5; later versions are permitted but are not automatically certified without tests. The only direct
 runtime dependency is the independent `symfony/yaml` component, not Symfony's
 framework. Its transitive dependencies are `symfony/polyfill-ctype` and
 `symfony/deprecation-contracts`. JSON, exact numeric arithmetic and portable
