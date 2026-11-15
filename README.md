@@ -90,8 +90,9 @@ Resource violations return `DICTIONARY_LIMIT_EXCEEDED`; unsupported syntax retur
 
 ## Reproduce acceptance tests
 
-The consolidated contract commit is recorded in `contract.ref`:
-`2dde1a09780e29c7385606c5e018fa75a0808b68`. No contract release tag exists yet.
+The annotated contract candidate tag is `v0.1.0-rc.1`. Its exact commit is
+`4c0f4bd0337c01c15a036910b6462e6f0e674927`, recorded in `contract.ref`.
+The candidate tag is not a final contract release.
 Tests read its original manifest and fixtures directly; expected outcomes are
 not copied into this repository. The runner rejects a different SHA or edited
 contract inputs. A deliberately unpaired surrogate fixture is represented as
