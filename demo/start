@@ -1,0 +1,12 @@
+#!/usr/bin/env sh
+set -eu
+source_root="${ARP_CONTRACT_PATH:-/contract}"
+snapshot="$(mktemp -d /tmp/arp-demo-php.XXXXXX)"
+mkdir -p "$snapshot/fixtures/dictionary/v1/sources"
+cp "$source_root/fixtures/dictionary/v1/catalog.json" "$snapshot/fixtures/dictionary/v1/catalog.json"
+cp "$source_root/fixtures/dictionary/v1/sources/portable-equivalent.json" \
+    "$snapshot/fixtures/dictionary/v1/sources/portable-equivalent.json"
+export ARP_CONTRACT_PATH="$snapshot"
+php -d display_errors=0 /app/demo/router.php
+exec php -d display_errors=0 -d log_errors=1 -d post_max_size=0 \
+    -S 0.0.0.0:8080 -t /app/demo /app/demo/router.php
