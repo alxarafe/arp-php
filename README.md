@@ -1,4 +1,4 @@
-# ARP PHP scalar dictionary
+# ARP PHP dictionary and CDS read metadata
 
 Standalone Composer library implementing the approved, unpublished ARP-DICT-001
 candidate (`arp.dictionary/v1`), with all 17 scalar types. No ERP, web framework,
@@ -90,8 +90,9 @@ Resource violations return `DICTIONARY_LIMIT_EXCEEDED`; unsupported syntax retur
 
 ## Reproduce acceptance tests
 
-The annotated contract candidate tag is `v0.1.0-rc.1`. Its exact commit is
-`4c0f4bd0337c01c15a036910b6462e6f0e674927`, recorded in `contract.ref`.
+The annotated contract candidate tag is `v0.1.0-rc.1`. Its historical scalar commit is
+`4c0f4bd0337c01c15a036910b6462e6f0e674927`. The current `contract.ref` pins
+`7a62bba0e8f84dbc198e837baf63fc7e0d8722e1` for CDS read metadata and the unchanged scalar fixtures.
 The candidate tag is not a final contract release.
 Tests read its original manifest and fixtures directly; expected outcomes are
 not copied into this repository. The runner rejects a different SHA or edited
@@ -123,3 +124,9 @@ docker run --rm --network none --user "$(id -u):$(id -g)" \
 ```
 
 See [architecture](docs/architecture.md) and [acceptance evidence](docs/conformance.md).
+
+
+## CDS read metadata
+
+The pure resolver, generation publication API, exact shared scenarios and limits are documented in
+[ARP-CDS-READ-002](docs/cds-read-002.md). This adds no HTTP, SQL, ORM or persistence dependency.

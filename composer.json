@@ -15,10 +15,12 @@
   "scripts": {
     "test": [
       "@test:conformance",
-      "@test:runtime"
+      "@test:runtime",
+      "@test:cds-read"
     ],
     "test:conformance": "@php tests/conformance.php",
     "test:runtime": "@php tests/runtime.php",
-    "test:structure": "bash tests/structure.sh"
+    "test:structure": "bash tests/structure.sh",
+    "test:cds-read": "@php tests/cds-read.php"
   }
 }
