@@ -135,5 +135,44 @@ $exact->columns[0]->integerRange = (object)['minimum'=>'-9223372036854775808','m
 $exact->columns[1]->characterLength->value = new ExactInteger('9223372036854775807');
 check(str_contains(PhysicalYaml::encode($exact, $key), '9223372036854775807'), 'exact integer codec');
 $groups[] = 'exact-integer-codec';
+$application = sys_get_temp_dir().'/arp-cache-app-'.bin2hex(random_bytes(8));
+mkdir($application); mkdir($application.'/cache/arp/physical', 0700, true);
+mkdir($application.'/arp/models', 0700, true); mkdir($application.'/custom-cache');
+$git = static function(array $args) use ($application): void {
+    $process = proc_open(['git','--literal-pathspecs','-C',$application,...$args],
+        [['file','/dev/null','r'],['file','/dev/null','w'],['file','/dev/null','w']], $pipes);
+    check(is_resource($process) && proc_close($process) === 0, 'test application Git');
+};
+$git(['init','--quiet']); $local = $application.'/cache/arp/physical';
+reject(static fn() => new FilePhysicalStore($local, [$application]), 'unignored application cache rejected');
+file_put_contents($application.'/.gitignore', "cache/\narp/models/\ncustom-cache/\n");
+$localStore = new FilePhysicalStore($local, [$application]); $observations = 0;
+$observe = static function() use (&$observations,$doc): object { ++$observations; return $doc; };
+$localStore->get($key, $observe);
+(new FilePhysicalStore($local, [$application]))->get($key, $observe);
+check($observations === 1, 'ignored application cache persisted');
+$localStore->invalidate($key); $localStore->get($key, $observe);
+check($observations === 2, 'application cache invalidation and regeneration');
+reject(static fn() => new FilePhysicalStore($application.'/arp/models', [$application]),
+    'ignored definitions are not authorized cache');
+reject(static fn() => new FilePhysicalStore($application.'/custom-cache', [$application]),
+    'custom cache requires authorization');
+$custom = new FilePhysicalStore($application.'/custom-cache', [$application], [$application.'/custom-cache']);
+$custom->get($key, $observe);
+reject(static fn() => new FilePhysicalStore($local, [$application], [$application.'/custom-cache']),
+    'cache outside authorized directory rejected');
+$link = $application.'/linked-cache'; symlink($local, $link);
+reject(static fn() => new FilePhysicalStore($link, [$application]), 'symlink cache rejected'); unlink($link);
+file_put_contents($application.'/.gitignore', '');
+reject(static fn() => $localStore->get($key, $observe), 'revoked ignore fails closed');
+file_put_contents($application.'/.gitignore', "cache/\n");
+$git(['add','-f','--',$localStore->fileFor($key)]);
+reject(static fn() => $localStore->get($key, $observe), 'force-staged cache rejected');
+$groups[] = 'git-ignored-application-cache';
+// Remove only this test's disposable application, never a user checkout.
+$files = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($application,
+    FilesystemIterator::SKIP_DOTS), RecursiveIteratorIterator::CHILD_FIRST);
+foreach ($files as $file) { if ($file->isDir()) rmdir($file->getPathname()); else unlink($file->getPathname()); }
+rmdir($application);
 file_put_contents($directory.'/proof.json', hash_file('sha256', $path));
 echo 'PERSISTENCE_SEED: '.json_encode($groups, JSON_THROW_ON_ERROR)."\n";

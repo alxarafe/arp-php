@@ -7,9 +7,16 @@ final class FilePhysicalStore
 {
     private string $root;
     private array $sources;
-    public function __construct(string $directory, array $versionedSourceRoots)
+    private array $cacheRoots;
+    public function __construct(string $directory, array $versionedSourceRoots, array $authorizedCacheRoots = [])
     {
         $this->root = self::directory($directory);
+        if (rtrim($directory, '/') !== $this->root) throw new ObservationException();
+        $this->cacheRoots = array_map(static function(string $path): string {
+            $real = self::directory($path);
+            if (rtrim($path, '/') !== $real) throw new ObservationException();
+            return $real;
+        }, $authorizedCacheRoots);
         $this->sources = array_map(self::directory(...), $versionedSourceRoots);
         if (!$this->sources) throw new \InvalidArgumentException('Declare the host versioned source roots');
         $this->checkRoot();
@@ -122,17 +129,45 @@ final class FilePhysicalStore
         }
         return $real;
     }
+    private static function within(string $path, string $parent): bool
+    {
+        return $path === $parent || str_starts_with($path, $parent.'/');
+    }
+    private static function git(string $repository, array $arguments): int
+    {
+        $pipes = [];
+        $process = @proc_open(['git', '-C', $repository, ...$arguments],
+            [['file','/dev/null','r'],['file','/dev/null','w'],['file','/dev/null','w']], $pipes);
+        if (!is_resource($process)) throw new ObservationException();
+        return proc_close($process);
+    }
     private function checkRoot(): void
     {
+        clearstatcache(true);
         if (realpath($this->root) !== $this->root) throw new ObservationException();
-        foreach ($this->sources as $source) {
-            if ($this->root === $source || str_starts_with($this->root, $source.'/')) throw new ObservationException();
-        }
+        $repository = null;
         for ($dir = $this->root; ; $dir = dirname($dir)) {
-            if (file_exists($dir.'/.git') || (is_file($dir.'/HEAD') && is_dir($dir.'/objects'))) {
-                throw new ObservationException();
-            }
+            if (is_file($dir.'/HEAD') && is_dir($dir.'/objects')) throw new ObservationException();
+            if (file_exists($dir.'/.git')) { $repository = $dir; break; }
             if (dirname($dir) === $dir) break;
+        }
+        $overlap = false;
+        foreach ($this->sources as $source) {
+            if ($this->root === $source) throw new ObservationException();
+            $overlap = $overlap || self::within($this->root, $source);
+        }
+        $authorized = $this->cacheRoots;
+        if (!$authorized && $repository !== null) $authorized = [$repository.'/cache/arp/physical'];
+        if ($overlap || $repository !== null || $this->cacheRoots) {
+            $allowed = false;
+            foreach ($authorized as $cache) $allowed = $allowed || self::within($this->root, $cache);
+            if (!$allowed) throw new ObservationException();
+        }
+        if ($repository !== null && (self::git($repository,
+            ['check-ignore','--quiet','--no-index','--',$this->root.'/']) !== 0
+            || self::git($repository,
+                ['--literal-pathspecs','ls-files','--error-unmatch','--',$this->root.'/']) !== 1)) {
+            throw new ObservationException();
         }
     }
 }
