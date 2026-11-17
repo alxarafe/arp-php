@@ -1,0 +1,50 @@
+[*]
+charset = utf-8
+end_of_line = lf
+indent_size = 4
+indent_style = space
+insert_final_newline = false
+max_line_length = 120
+tab_width = 4
+ij_continuation_indent_size = 8
+ij_formatter_off_tag = @formatter:off
+ij_formatter_on_tag = @formatter:on
+ij_formatter_tags_enabled = true
+ij_smart_tabs = false
+ij_visual_guides =
+ij_wrap_on_typing = false
+
+[*.php]
+# Preserve the repository's existing compact methods, guards and authored line breaks.
+# Do not apply PSR-12 or a whole-repository formatting migration implicitly.
+ij_php_class_brace_style = next_line
+ij_php_method_brace_style = next_line
+ij_php_block_brace_style = end_of_line
+ij_php_keep_line_breaks = true
+ij_php_keep_simple_blocks_in_one_line = true
+ij_php_keep_simple_methods_in_one_line = true
+ij_php_if_brace_force = never
+ij_php_for_brace_force = never
+ij_php_while_brace_force = never
+ij_php_do_while_brace_force = never
+ij_php_assignment_wrap = off
+ij_php_binary_operation_wrap = off
+ij_php_array_initializer_wrap = off
+ij_php_method_call_chain_wrap = off
+ij_php_call_parameters_wrap = off
+ij_php_method_parameters_wrap = off
+ij_php_wrap_long_lines = false
+
+[*.json]
+indent_size = 2
+ij_json_keep_line_breaks = true
+ij_json_wrap_long_lines = false
+
+[{*.yaml,*.yml}]
+indent_size = 2
+ij_yaml_keep_line_breaks = true
+
+[{*.markdown,*.md,*.mdc}]
+# Preserve Markdown hard line breaks.
+trim_trailing_whitespace = false
+ij_markdown_keep_line_breaks_inside_text_blocks = true
