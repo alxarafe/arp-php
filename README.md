@@ -130,3 +130,10 @@ See [architecture](docs/architecture.md) and [acceptance evidence](docs/conforma
 
 The pure resolver, generation publication API, exact shared scenarios and limits are documented in
 [ARP-CDS-READ-002](docs/cds-read-002.md). This adds no HTTP, SQL, ORM or persistence dependency.
+
+## Optional physical metadata provider
+
+[ARP-CDS-READ-003](docs/cds-read-003.md) documents the independent real-database adapter, lazy generation,
+explicit invalidation, optional external physical YAML persistence/recovery, isolated Docker tests and the minimal
+LIST/GET decisions still pending.
+The pure dictionary/CDS resolver remains usable without SQL, HTTP, ORM or the adapter driver.

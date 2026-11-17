@@ -9,7 +9,8 @@
   },
   "autoload": {
     "psr-4": {
-      "Alxarafe\\Arp\\Dictionary\\": "src/"
+      "Alxarafe\\Arp\\Dictionary\\": "src/",
+      "Alxarafe\\Arp\\Cds\\Physical\\": "providers/mariadb/src/"
     }
   },
   "scripts": {
