@@ -97,7 +97,13 @@ abstract class SqlRecordReader implements RecordReader
     protected abstract function protect(PDO $connection, object $physical): void;
     protected abstract function observe(object $physical, PDO $data): object;
     protected abstract function independent(PDO $data, PDO $guard): bool;
-    protected function valueExpression(string $column): string { return $column; }
+    protected function valueExpression(string $column, string $type): string { return $column; }
+    protected function keyComparison(array $keys, bool $get, array $position, array &$parameters): string
+    {
+        array_push($parameters, ...$position);
+        return '('.implode(',', $keys).')'.($get ? ' = (' : ' > (')
+            .implode(',', array_fill(0, count($keys), '?')).')';
+    }
     protected function limitClause(): string { return ' FETCH FIRST ? ROWS ONLY'; }
     protected function portableValue(array $row, array $column): mixed { return $row[$column['name']]; }
 
@@ -143,13 +149,11 @@ abstract class SqlRecordReader implements RecordReader
         }
         $keyNames = array_map(fn($c) => $this->quote($c['name']), $prepared->keys);
         if ($plan->position !== null) {
-            $predicates[] = '('.implode(',', $keyNames).')'.($plan->get ? ' = (' : ' > (')
-                .implode(',', array_fill(0, count($keyNames), '?')).')';
-            array_push($parameters, ...$plan->position);
+            $predicates[] = $this->keyComparison($keyNames, $plan->get, $plan->position, $parameters);
         }
         $physical = $prepared->physical();
         $relation = $this->quote($physical->source->schema).'.'.$this->quote($physical->source->name);
-        $sql = 'SELECT '.implode(',', array_map(fn($c) => $this->valueExpression($this->quote($c['name'])),
+        $sql = 'SELECT '.implode(',', array_map(fn($c) => $this->valueExpression($this->quote($c['name']), $c['type']),
             array_values($columns))).' FROM '.$relation
             .($predicates ? ' WHERE '.implode(' AND ', $predicates) : '')
             .' ORDER BY '.implode(',', array_map(static fn($k) => $relation.'.'.$k.' ASC', $keyNames))
