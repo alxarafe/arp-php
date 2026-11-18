@@ -7,7 +7,7 @@ use Alxarafe\Arp\Dictionary\Cds\{ReadPublication,ReadResolver,ReadResult};
 use Alxarafe\Arp\Dictionary\Internal\{Parser,Projection};
 
 /** Local request/process catalog. Hosts sharing it across threads must serialize access externally. */
-final class PhysicalCatalog
+final class PhysicalCatalog implements \Alxarafe\Arp\Dictionary\Cds\ReadCatalog
 {
     private ReadPublication $publication;
     private ReadResolver $resolver;
@@ -39,6 +39,11 @@ final class PhysicalCatalog
             catch (ObservationException) { $this->blocked ??= $provider->providerId(); }
         }
         if ($this->blocked !== null) throw new ObservationException();
+    }
+    public function generation(): int { return $this->publication->generation(); }
+    public function publishRead(ReadResult $expected, \Closure $publish): mixed
+    {
+        return $this->publication->publishRead($expected, $publish);
     }
     public function current(): ?ReadResult { return $this->publication->current(); }
 

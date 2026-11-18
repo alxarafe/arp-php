@@ -137,3 +137,9 @@ The pure resolver, generation publication API, exact shared scenarios and limits
 explicit invalidation, optional physical YAML persistence/recovery, isolated Docker tests and the minimal
 LIST/GET decisions still pending.
 The pure dictionary/CDS resolver remains usable without SQL, HTTP, ORM or the adapter driver.
+
+## LIST/GET con PDO y MariaDB
+
+La lectura neutral y el proveedor opcional MariaDB 12.3 se describen en
+[docs/sql-php-001.md](docs/sql-php-001.md), incluida la ejecución de pruebas sin BD y la integración real opcional.
+El informe registra equivalencias, límites y cobertura de los 88 vectores del contrato fijado por `listget-contract.ref`.

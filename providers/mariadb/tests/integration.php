@@ -150,7 +150,7 @@ $types = $observer('types_test')->observe();
 check(!isset($types->columns[0]->scalarType), 'no invented UINT64');
 same($types->columns[0]->integerRange->maximum, '18446744073709551615', 'exact unsigned extent');
 same($types->columns[1]->scalarType, 'INT8', 'tinyint width is not boolean');
-check(!isset($types->columns[2]->scalarType), 'decimal proof remains unknown');
+same($types->columns[2]->scalarType, 'DECIMAL', 'decimal scalar codec fact; editing domain remains unverified');
 same($types->columns[2]->decimalGeometry, (object)['precision'=>20,'scale'=>4], 'observed geometry');
 check($types->columns[3]->generated && $types->columns[4]->identity, 'generated/identity flags');
 $additional[] = 'unsigned-int64-no-false-boolean-decimal-generated-identity';

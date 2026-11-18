@@ -10,18 +10,25 @@
   "autoload": {
     "psr-4": {
       "Alxarafe\\Arp\\Dictionary\\": "src/",
-      "Alxarafe\\Arp\\Cds\\Physical\\": "providers/mariadb/src/"
+      "Alxarafe\\Arp\\Cds\\Physical\\": [
+        "src/Cds/Physical/",
+        "providers/mariadb/src/"
+      ],
+      "Alxarafe\\Arp\\Sql\\": "providers/sql/src/",
+      "Alxarafe\\Arp\\MariaDb\\": "providers/mariadb/src/"
     }
   },
   "scripts": {
     "test": [
       "@test:conformance",
       "@test:runtime",
-      "@test:cds-read"
+      "@test:cds-read",
+      "@test:listget"
     ],
     "test:conformance": "@php tests/conformance.php",
     "test:runtime": "@php tests/runtime.php",
     "test:structure": "bash tests/structure.sh",
-    "test:cds-read": "@php tests/cds-read.php"
+    "test:cds-read": "@php tests/cds-read.php",
+    "test:listget": "@php tests/listget.php"
   }
 }
