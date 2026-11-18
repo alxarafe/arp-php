@@ -26,22 +26,25 @@ final readonly class MariaDbObservationProvider implements PhysicalObservationPr
     {
         $connection = null;
         try {
-            $connection = ($this->connect)();
-            if (!$connection instanceof PDO || $connection->inTransaction()) throw new ObservationException();
-            $connection->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-            $connection->setAttribute(PDO::ATTR_STRINGIFY_FETCHES, true);
-            $version = $connection->query('SELECT VERSION()')->fetchColumn();
+            $candidate = ($this->connect)();
+            if (!$candidate instanceof PDO || $candidate->inTransaction()
+                || $candidate->getAttribute(PDO::ATTR_PERSISTENT)) throw new ObservationException();
+            $connection = $candidate; $candidate = null;
+            if (!$connection->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION)) throw new ObservationException();
+            if (!$connection->setAttribute(PDO::ATTR_STRINGIFY_FETCHES, true)) throw new ObservationException();
+            if (!$connection->setAttribute(PDO::ATTR_EMULATE_PREPARES, false)) throw new ObservationException();
+            $version = $this->rows($connection, 'SELECT VERSION() AS version', [])[0]['version'];
             if (!is_string($version) || !str_contains($version, 'MariaDB')) throw new ObservationException();
-            $connection->exec('SET SESSION lock_wait_timeout = '.$this->timeoutSeconds);
-            $connection->exec('SET SESSION max_statement_time = '.$this->timeoutSeconds);
-            $connection->exec('SET TRANSACTION READ ONLY');
-            $connection->beginTransaction();
+            $this->rows($connection, 'SET SESSION lock_wait_timeout = '.$this->timeoutSeconds, []);
+            $this->rows($connection, 'SET SESSION max_statement_time = '.$this->timeoutSeconds, []);
+            $this->rows($connection, 'SET TRANSACTION READ ONLY', []);
+            if (!$connection->beginTransaction()) throw new ObservationException();
             // InnoDB metadata lock remains until commit; no application rows are read or returned.
-            $connection->query('SELECT * FROM '.self::quote($this->schema).'.'.self::quote($this->table)
-                .' LIMIT 0')->closeCursor();
+            $this->rows($connection, 'SELECT * FROM '.self::quote($this->schema).'.'.self::quote($this->table)
+                .' LIMIT 0', []);
             // Keep table metadata authority explicit, independently of wildcard expansion and invisible columns.
             $tableSql = self::quote($this->schema).'.'.self::quote($this->table);
-            $connection->query('SHOW CREATE TABLE '.$tableSql)->closeCursor();
+            $this->rows($connection, 'SHOW CREATE TABLE '.$tableSql, []);
             $rows = $this->rows($connection, 'SELECT TABLE_TYPE, TABLE_SCHEMA, TABLE_NAME FROM information_schema.TABLES
                 WHERE TABLE_SCHEMA = ? AND TABLE_NAME = ?');
             if (count($rows) !== 1 || $rows[0]['TABLE_TYPE'] !== 'BASE TABLE') throw new ObservationException();
@@ -70,6 +73,8 @@ final readonly class MariaDbObservationProvider implements PhysicalObservationPr
                     'int' => $unsigned ? 'UINT32' : 'INT32',
                     'bigint' => $unsigned ? null : 'INT64',
                     'char','varchar' => 'STRING',
+                    'decimal' => 'DECIMAL',
+                    'date' => 'DATE',
                     'tinytext','text','mediumtext','longtext' => 'TEXT',
                     default => null
                 };
@@ -137,22 +142,26 @@ final readonly class MariaDbObservationProvider implements PhysicalObservationPr
                     'name'=>$observedName,'engineVersion'=>$version],
                 'columns'=>$columns,'primaryKey'=>$primary,'foreignKeys'=>array_values($foreign)];
             if ($complete) $result->indexes = array_values($indexes);
-            $connection->commit();
+            if (!$connection->commit()) throw new ObservationException();
             return $result;
         } catch (PDOException) {
             throw new ObservationException();
         } finally {
             if ($connection instanceof PDO && $connection->inTransaction()) {
-                // A lost connection can also fail rollback; do not replace the sanitized observation failure.
-                try { $connection->rollBack(); } catch (PDOException) { }
+                // Cleanup is mandatory even after failed metadata decoding; failures remain sanitized.
+                try { if (!$connection->rollBack()) throw new ObservationException(); }
+                catch (PDOException) { throw new ObservationException(); }
             }
         }
     }
 
-    private function rows(PDO $connection, string $sql): array
+    private function rows(PDO $connection, string $sql, ?array $parameters = null): array
     {
         $statement = $connection->prepare($sql);
-        $statement->execute([$this->schema,$this->table]);
-        return $statement->fetchAll(PDO::FETCH_ASSOC);
+        if ($statement === false) throw new ObservationException();
+        try {
+            if (!$statement->execute($parameters ?? [$this->schema,$this->table])) throw new ObservationException();
+            return $statement->columnCount() ? $statement->fetchAll(PDO::FETCH_ASSOC) : [];
+        } finally { if (!$statement->closeCursor()) throw new ObservationException(); }
     }
 }
