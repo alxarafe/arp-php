@@ -12,10 +12,16 @@
       "Alxarafe\\Arp\\Dictionary\\": "src/",
       "Alxarafe\\Arp\\Cds\\Physical\\": [
         "src/Cds/Physical/",
-        "providers/mariadb/src/"
+        "providers/mariadb/src/",
+        "providers/mysql/src/",
+        "providers/postgresql/src/",
+        "providers/sqlserver/src/"
       ],
       "Alxarafe\\Arp\\Sql\\": "providers/sql/src/",
-      "Alxarafe\\Arp\\MariaDb\\": "providers/mariadb/src/"
+      "Alxarafe\\Arp\\MariaDb\\": "providers/mariadb/src/",
+      "Alxarafe\\Arp\\MySql\\": "providers/mysql/src/",
+      "Alxarafe\\Arp\\PostgreSql\\": "providers/postgresql/src/",
+      "Alxarafe\\Arp\\SqlServer\\": "providers/sqlserver/src/"
     }
   },
   "scripts": {
