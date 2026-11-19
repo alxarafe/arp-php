@@ -1,5 +1,7 @@
 <?php
+
 declare(strict_types=1);
+
 namespace Alxarafe\Arp\PostgreSql;
 
 use Alxarafe\Arp\Sql\{SqlRecordReader,SqlMetadata};
@@ -9,8 +11,14 @@ use PDO;
 
 class PostgreSqlRecordReader extends SqlRecordReader
 {
-    protected function connection(): PDO { return SqlMetadata::connection($this->connect, 'pgsql'); }
-    protected function begin(PDO $connection): void { PostgreSqlMetadata::begin($connection, $this->timeoutSeconds); }
+    protected function connection(): PDO
+    {
+        return SqlMetadata::connection($this->connect, 'pgsql');
+    }
+    protected function begin(PDO $connection): void
+    {
+        PostgreSqlMetadata::begin($connection, $this->timeoutSeconds);
+    }
     protected function protect(PDO $connection, object $physical): void
     {
         self::need($physical->source->dialect === 'postgresql');
@@ -23,13 +31,19 @@ class PostgreSqlRecordReader extends SqlRecordReader
     }
     protected function observe(object $physical, PDO $data): object
     {
-        $connect = function() use ($data): PDO {
+        $connect = function () use ($data): PDO {
             $connection = $this->connection();
             self::need($connection !== $data && $this->independent($data, $connection), 'READ_FAILED');
             return $connection;
         };
-        return (new PostgreSqlObservationProvider($connect, $physical->source->provider, $physical->id,
-            $physical->source->schema, $physical->source->name, $this->timeoutSeconds))->observe();
+        return (new PostgreSqlObservationProvider(
+            $connect,
+            $physical->source->provider,
+            $physical->id,
+            $physical->source->schema,
+            $physical->source->name,
+            $this->timeoutSeconds
+        ))->observe();
     }
     protected function execute(PDO $connection, string $sql, array $parameters = []): array
     {
@@ -42,13 +56,18 @@ class PostgreSqlRecordReader extends SqlRecordReader
     }
     protected function valueExpression(string $column, string $type): string
     {
-        return 'CAST('.$column.' AS text) AS '.$column;
+        return 'CAST(' . $column . ' AS text) AS ' . $column;
     }
-    protected function limitClause(): string { return ' LIMIT ?'; }
+    protected function limitClause(): string
+    {
+        return ' LIMIT ?';
+    }
     protected function portableValue(array $row, array $column): mixed
     {
         $value = $row[$column['name']];
-        if ($value === null || $column['type'] !== 'BOOLEAN') return $value;
+        if ($value === null || $column['type'] !== 'BOOLEAN') {
+            return $value;
+        }
         return match ($value) {
             'true' => true, 'false' => false, default => throw new ReadFailure('ROW_DECODE_FAILED')
         };

@@ -1,5 +1,7 @@
 <?php
+
 declare(strict_types=1);
+
 namespace Alxarafe\Arp\Dictionary\Cds;
 
 interface RecordReader

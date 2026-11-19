@@ -1,5 +1,7 @@
 <?php
+
 declare(strict_types=1);
+
 namespace Alxarafe\Arp\Cds\Physical;
 
 use Alxarafe\Arp\Dictionary\Catalog;
@@ -16,7 +18,9 @@ final class PhysicalCatalog implements \Alxarafe\Arp\Dictionary\Cds\ReadCatalog
 
     public function __construct(private readonly Catalog $dictionary, object $definitions, array $providers)
     {
-        if (count($providers) > 256) throw new \InvalidArgumentException('Too many registered providers');
+        if (count($providers) > 256) {
+            throw new \InvalidArgumentException('Too many registered providers');
+        }
         foreach ($providers as $provider) {
             if (!$provider instanceof PhysicalObservationProvider) {
                 throw new \InvalidArgumentException('Expected provider');
@@ -32,26 +36,47 @@ final class PhysicalCatalog implements \Alxarafe\Arp\Dictionary\Cds\ReadCatalog
     private ?string $blocked = null;
     public function invalidate(): void
     {
-        $this->publication->invalidate(); $this->blocked = null;
+        $this->publication->invalidate();
+        $this->blocked = null;
         foreach ($this->providers as $provider) {
-            if (!$provider instanceof InvalidatablePhysicalProvider) continue;
-            try { $provider->invalidate(); }
-            catch (ObservationException) { $this->blocked ??= $provider->providerId(); }
+            if (!$provider instanceof InvalidatablePhysicalProvider) {
+                continue;
+            }
+            try {
+                $provider->invalidate();
+            } catch (ObservationException) {
+                $this->blocked ??= $provider->providerId();
+            }
         }
-        if ($this->blocked !== null) throw new ObservationException();
+        if ($this->blocked !== null) {
+            throw new ObservationException();
+        }
     }
-    public function generation(): int { return $this->publication->generation(); }
+    public function generation(): int
+    {
+        return $this->publication->generation();
+    }
     public function publishRead(ReadResult $expected, \Closure $publish): mixed
     {
         return $this->publication->publishRead($expected, $publish);
     }
-    public function current(): ?ReadResult { return $this->publication->current(); }
+    public function current(): ?ReadResult
+    {
+        return $this->publication->current();
+    }
 
     public function resolve(): ReadResult
     {
-        if (($current = $this->publication->current()) !== null) return $current;
-        if ($this->blocked !== null) return ReadResult::failure('OBSERVATION_FAILED',
-            '/providers/'.str_replace(['~','/'], ['~0','~1'], $this->blocked), 'execution-failure');
+        if (($current = $this->publication->current()) !== null) {
+            return $current;
+        }
+        if ($this->blocked !== null) {
+            return ReadResult::failure(
+                'OBSERVATION_FAILED',
+                '/providers/' . str_replace(['~','/'], ['~0','~1'], $this->blocked),
+                'execution-failure'
+            );
+        }
         $ticket = $this->publication->beginGeneration();
         $bundle = Parser::parse($this->definitions, 'json');
         $bundle->physical = new \stdClass();
@@ -59,9 +84,11 @@ final class PhysicalCatalog implements \Alxarafe\Arp\Dictionary\Cds\ReadCatalog
             try {
                 $bundle->physical->$handle = $provider->observe();
             } catch (ObservationException) {
-                $at = '/providers/'.str_replace(['~','/'], ['~0','~1'], $provider->providerId());
-                return $this->publication->publish($ticket,
-                    ReadResult::failure('OBSERVATION_FAILED', $at, 'execution-failure'));
+                $at = '/providers/' . str_replace(['~','/'], ['~0','~1'], $provider->providerId());
+                return $this->publication->publish(
+                    $ticket,
+                    ReadResult::failure('OBSERVATION_FAILED', $at, 'execution-failure')
+                );
             }
         }
         return $this->publication->publish($ticket, $this->resolver->resolve($bundle, $this->dictionary));

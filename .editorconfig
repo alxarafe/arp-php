@@ -1,3 +1,5 @@
+root = true
+
 [*]
 charset = utf-8
 end_of_line = lf
@@ -15,25 +17,26 @@ ij_visual_guides =
 ij_wrap_on_typing = false
 
 [*.php]
-# Preserve the repository's existing compact methods, guards and authored line breaks.
-# Do not apply PSR-12 or a whole-repository formatting migration implicitly.
+# PSR-12: brace on next line for classes, methods and functions; same line for
+# control structures. Always use braces and one statement per line.
+insert_final_newline = true
 ij_php_class_brace_style = next_line
 ij_php_method_brace_style = next_line
 ij_php_block_brace_style = end_of_line
-ij_php_keep_line_breaks = true
-ij_php_keep_simple_blocks_in_one_line = true
-ij_php_keep_simple_methods_in_one_line = true
-ij_php_if_brace_force = never
-ij_php_for_brace_force = never
-ij_php_while_brace_force = never
-ij_php_do_while_brace_force = never
-ij_php_assignment_wrap = off
-ij_php_binary_operation_wrap = off
-ij_php_array_initializer_wrap = off
-ij_php_method_call_chain_wrap = off
-ij_php_call_parameters_wrap = off
-ij_php_method_parameters_wrap = off
-ij_php_wrap_long_lines = false
+ij_php_keep_line_breaks = false
+ij_php_keep_simple_blocks_in_one_line = false
+ij_php_keep_simple_methods_in_one_line = false
+ij_php_if_brace_force = always
+ij_php_for_brace_force = always
+ij_php_while_brace_force = always
+ij_php_do_while_brace_force = always
+ij_php_assignment_wrap = normal
+ij_php_binary_operation_wrap = normal
+ij_php_array_initializer_wrap = normal
+ij_php_method_call_chain_wrap = normal
+ij_php_call_parameters_wrap = normal
+ij_php_method_parameters_wrap = normal
+ij_php_wrap_long_lines = true
 
 [*.json]
 indent_size = 2

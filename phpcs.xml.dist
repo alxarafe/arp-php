@@ -1,0 +1,28 @@
+<?xml version="1.0"?>
+<ruleset name="ARP PHP">
+    <description>PSR-12 coding standard for the ARP PHP library.</description>
+
+    <arg name="basepath" value="."/>
+    <arg name="colors"/>
+    <arg value="ps"/>
+
+    <file>src</file>
+    <file>providers</file>
+    <file>tests</file>
+    <file>demo/router.php</file>
+
+    <exclude-pattern>*/vendor/*</exclude-pattern>
+
+    <rule ref="PSR12">
+        <!-- Executable test scripts define inline helpers on purpose. -->
+        <exclude name="PSR1.Classes.ClassDeclaration"/>
+        <exclude name="PSR1.Files.SideEffects"/>
+        <!-- The 120-column limit is advisory in PSR-12 and configured in .editorconfig. -->
+        <exclude name="Generic.Files.LineLength"/>
+    </rule>
+
+    <rule ref="PSR1.Classes.ClassDeclaration">
+        <include-pattern>src/*</include-pattern>
+        <include-pattern>providers/*/src/*</include-pattern>
+    </rule>
+</ruleset>
