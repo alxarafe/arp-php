@@ -21,11 +21,25 @@ jobs:
       image: rsanjose/php851:latest
       options: --user root
 
+    env:
+      ARP_CONTRACT_PATH: ${{ github.workspace }}/arp-contract
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
         with:
           persist-credentials: false
+
+      - name: Checkout pinned contract
+        uses: actions/checkout@v4
+        with:
+          repository: alxarafe/arp-contract
+          path: arp-contract
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Pin contract commit
+        run: git -C arp-contract checkout --detach "$(cat contract.ref)"
 
       - name: PHP version
         run: php -v
@@ -40,7 +54,4 @@ jobs:
         run: composer lint
 
       - name: PHP tests
-        run: |
-          composer test:runtime
-          composer test:cds-read
-          composer test:listget
+        run: composer test
