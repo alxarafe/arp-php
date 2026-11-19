@@ -143,3 +143,12 @@ The pure dictionary/CDS resolver remains usable without SQL, HTTP, ORM or the ad
 La lectura neutral y el proveedor opcional MariaDB 12.3 se describen en
 [docs/sql-php-001.md](docs/sql-php-001.md), incluida la ejecución de pruebas sin BD y la integración real opcional.
 El informe registra equivalencias, límites y cobertura de los 88 vectores del contrato fijado por `listget-contract.ref`.
+
+## Estilo de código
+
+El código PHP sigue PSR-12. La configuración está en `phpcs.xml.dist` y las reglas de editor en `.editorconfig`:
+
+```sh
+composer lint   # comprueba PSR-12
+composer fix    # aplica las correcciones automáticas
+```

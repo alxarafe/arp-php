@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 use Alxarafe\Arp\Dictionary\CatalogBuilder;
@@ -33,18 +34,18 @@ function rootMembers(string $json): int
         if ($quoted) {
             if ($escaped) {
                 $escaped = false;
-            } else if ($char === '\\') {
+            } elseif ($char === '\\') {
                 $escaped = true;
-            } else if ($char === '"') {
+            } elseif ($char === '"') {
                 $quoted = false;
             }
-        } else if ($char === '"') {
+        } elseif ($char === '"') {
             $quoted = true;
-        } else if ($char === '{' || $char === '[') {
+        } elseif ($char === '{' || $char === '[') {
             $depth++;
-        } else if ($char === '}' || $char === ']') {
+        } elseif ($char === '}' || $char === ']') {
             $depth--;
-        } else if ($char === ':' && $depth === 1) {
+        } elseif ($char === ':' && $depth === 1) {
             $count++;
         }
     }
@@ -54,9 +55,11 @@ function rootMembers(string $json): int
 try {
     $origin = getenv('ARP_DEMO_ORIGIN') ?: 'http://127.0.0.1:4173';
     $parts = parse_url($origin);
-    if ($parts === false || !in_array($parts['scheme'] ?? '', ['http', 'https'], true)
+    if (
+        $parts === false || !in_array($parts['scheme'] ?? '', ['http', 'https'], true)
             || !isset($parts['host']) || isset($parts['user']) || isset($parts['pass'])
-            || isset($parts['path']) || isset($parts['query']) || isset($parts['fragment'])) {
+            || isset($parts['path']) || isset($parts['query']) || isset($parts['fragment'])
+    ) {
         throw new RuntimeException('ARP_DEMO_ORIGIN must be one exact http(s) origin');
     }
     $root = getenv('ARP_CONTRACT_PATH') ?: '/contract';
@@ -115,14 +118,14 @@ try {
         output(200, ['demoProtocol' => 'arp-demo-php/1', 'runtime' => 'php',
             'libraryContractRef' => trim(file_get_contents(dirname(__DIR__) . '/contract.ref')),
             'capabilities' => ['dictionary.list', 'dictionary.describe', 'dictionary.validate'], 'sources' => $hashes]);
-    } else if ($path === '/demo/dictionary/elements') {
+    } elseif ($path === '/demo/dictionary/elements') {
         $elements = [];
         foreach ($catalog->ids() as $id) {
             $descriptor = $catalog->resolve($id)['descriptor'];
             $elements[] = ['id' => $id, 'type' => $descriptor->type];
         }
         output(200, ['elements' => $elements]);
-    } else if (!$validation) {
+    } elseif (!$validation) {
         $descriptor = $catalog->descriptorJson($match[1]);
         if ($descriptor === null) {
             output(404, $catalog->resolve($match[1]));
@@ -153,8 +156,10 @@ try {
             return;
         }
         // JSON numeric kinds cannot succeed as scalar values; pass them unchanged for real type rejection.
-        output($catalog->descriptorJson($match[1]) === null ? 404 : 200,
-            $catalog->validate($match[1], $document->value));
+        output(
+            $catalog->descriptorJson($match[1]) === null ? 404 : 200,
+            $catalog->validate($match[1], $document->value)
+        );
     }
 } catch (Throwable $failure) {
     error_log((string) $failure);

@@ -7,6 +7,9 @@
     "php": ">=8.5",
     "symfony/yaml": "^7.4"
   },
+  "require-dev": {
+    "squizlabs/php_codesniffer": "^4.0"
+  },
   "autoload": {
     "psr-4": {
       "Alxarafe\\Arp\\Dictionary\\": "src/",
@@ -35,6 +38,8 @@
     "test:runtime": "@php tests/runtime.php",
     "test:structure": "bash tests/structure.sh",
     "test:cds-read": "@php tests/cds-read.php",
-    "test:listget": "@php tests/listget.php"
+    "test:listget": "@php tests/listget.php",
+    "lint": "@php vendor/bin/phpcs",
+    "fix": "@php vendor/bin/phpcbf"
   }
 }
