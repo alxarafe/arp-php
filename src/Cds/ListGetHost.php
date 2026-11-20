@@ -213,7 +213,7 @@ final class ListGetHost
             $epoch,
             $snapshot,
             $generation
-): void {
+        ): void {
             self::need(($this->active[$target] ?? null) === $registration, 'GENERATION_CHANGED');
             self::need(
                 serialize($this->access($target, $operation, $context, $fields)) === serialize($initial),
