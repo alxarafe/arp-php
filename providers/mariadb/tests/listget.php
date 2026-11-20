@@ -177,7 +177,7 @@ foreach (['composite','simple'] as $layoutName) {
         $context,
         &$responses,
         $layoutName
-): array {
+    ): array {
         $request = json_encode(['target' => $target,'operation' => $operation,'inputs' => $inputs]);
         $result = $host->invoke($request, $ctx ?? $context);
         $responses[] = ['layout' => $layoutName,'response' => $result];
