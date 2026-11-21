@@ -152,3 +152,11 @@ El código PHP sigue PSR-12. La configuración está en `phpcs.xml.dist` y las r
 composer lint   # comprueba PSR-12
 composer fix    # aplica las correcciones automáticas
 ```
+
+## Candidate managed writes on MariaDB
+
+[ARP-CRUD-001B](docs/crud-001b.md) implements a real CREATE/UPDATE/DELETE path over the existing `demo.items`
+definitions, catalog and LIST/GET providers. Writes use parameters, owned transactions, per-field UPDATE checks
+and read-bound DELETE evidence. The [matrix](docs/crud-conformance.json) distinguishes 45 native shared cases
+from the remaining unexecuted vectors; it does not claim complete write conformance or enable pending scalar types.
+Run `providers/crud-docker.py` against the clean revision in `write-contract.ref` for reproducible isolated tests.

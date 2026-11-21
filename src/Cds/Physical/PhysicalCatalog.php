@@ -16,8 +16,12 @@ final class PhysicalCatalog implements \Alxarafe\Arp\Dictionary\Cds\ReadCatalog
     private string $definitions;
     private array $providers;
 
-    public function __construct(private readonly Catalog $dictionary, object $definitions, array $providers)
-    {
+    public function __construct(
+        private readonly Catalog $dictionary,
+        object $definitions,
+        array $providers,
+        bool $writeOperations = false
+    ) {
         if (count($providers) > 256) {
             throw new \InvalidArgumentException('Too many registered providers');
         }
@@ -30,7 +34,7 @@ final class PhysicalCatalog implements \Alxarafe\Arp\Dictionary\Cds\ReadCatalog
         ksort($providers, SORT_STRING);
         $this->providers = $providers;
         $this->publication = new ReadPublication();
-        $this->resolver = new ReadResolver();
+        $this->resolver = new ReadResolver($writeOperations);
     }
 
     private ?string $blocked = null;

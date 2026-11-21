@@ -23,6 +23,7 @@ jobs:
 
     env:
       ARP_CONTRACT_PATH: ${{ github.workspace }}/arp-contract
+      ARP_WRITE_CONTRACT_PATH: ${{ github.workspace }}/write-contract
 
     steps:
       - name: Checkout
@@ -41,6 +42,9 @@ jobs:
       - name: Pin contract commit
         run: git -C arp-contract checkout --detach "$(cat contract.ref)"
 
+      - name: Pin write contract separately
+        run: git -C arp-contract worktree add --detach ../write-contract "$(cat write-contract.ref)"
+
       - name: PHP version
         run: php -v
 
@@ -55,3 +59,48 @@ jobs:
 
       - name: PHP tests
         run: composer test
+
+  crud-mariadb:
+    name: Real CRUD on MariaDB
+    runs-on: ubuntu-latest
+    container:
+      image: rsanjose/php851:latest
+      options: --user root
+    services:
+      db:
+        image: mariadb:12.3
+        env:
+          MARIADB_DATABASE: arpcds
+          MARIADB_ROOT_PASSWORD: ${{ github.run_id }}-crud-isolated
+        options: >-
+          --health-cmd="healthcheck.sh --connect --innodb_initialized"
+          --health-interval=2s --health-timeout=5s --health-retries=60
+    env:
+      ARP_WRITE_CONTRACT_PATH: ${{ github.workspace }}/arp-write-contract
+      ARP_DB_PASSWORD: ${{ github.run_id }}-crud-isolated
+      ARP_WRITE_REPORT: ${{ github.workspace }}/crud-mariadb-report.json
+      ARP_CRUD_RUN_TOKEN: ${{ github.run_id }}-${{ github.run_attempt }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/checkout@v4
+        with:
+          repository: alxarafe/arp-contract
+          path: arp-write-contract
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Pin reviewed write contract
+        run: git -C arp-write-contract checkout --detach "$(cat write-contract.ref)"
+      - name: Install existing dependencies
+        run: composer install --no-interaction --no-progress
+      - name: Mark isolated service database
+        run: |
+          php -r '$c = new PDO("mysql:host=db;dbname=arpcds", "root", getenv("ARP_DB_PASSWORD"));
+          $c->exec("CREATE TABLE __arp_crud_test_owner(token varchar(64))");
+          $s = $c->prepare("INSERT INTO __arp_crud_test_owner VALUES (?)");
+          $s->execute([getenv("ARP_CRUD_RUN_TOKEN")]);'
+      - name: Real transactions, shared vectors and concurrent sessions
+        run: php providers/tests/crud-mariadb.php
+      - name: Conformance matrix
+        run: cat crud-mariadb-report.json
