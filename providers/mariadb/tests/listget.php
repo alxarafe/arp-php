@@ -3,6 +3,8 @@
 declare(strict_types=1);
 
 require __DIR__ . '/../../../vendor/autoload.php';
+require __DIR__ . '/../../../tests/Support/Contract.php';
+require __DIR__ . '/../../../tests/Support/NeutralReadCases.php';
 use Alxarafe\Arp\Dictionary\{CatalogBuilder,Source};
 use Alxarafe\Arp\Dictionary\Cds\{ListGetHost,ReadFailure};
 use Alxarafe\Arp\Dictionary\Internal\{Parser,Projection};
@@ -266,24 +268,18 @@ foreach (['composite','simple'] as $layoutName) {
     check(array_keys((array)$summary['output']['records'][0]['values']) === ['sku','name'], 'derived projection');
     $expectFailure($invoke('GET', ['key' => $all[0]['key']], 'products.summary'), 'UNAVAILABLE');
     // Direct original requests/expectations; opaque fixture placeholders deliberately excluded.
-    $directIds = ['get-unknown-reference','get-simple-typed-key','get-composite-typed-key',
-        'get-missing-typed-key','get-raw-hidden-key-rejected',
-        'key-null','key-incomplete','key-reordered','key-extra','key-number-not-string','key-wrong-type',
-        'key-out-of-range','list-limit-zero','list-limit-negative','list-limit-bool','list-limit-fraction',
-        'list-limit-too-large','list-limit-null','list-arbitrary-filter','list-arbitrary-sort','list-fields-injection',
-        'list-offset-rejected','cursor-unknown','cursor-null','client-context-injection','input-null'];
-    foreach ($vectors->cases as $vector) {
-        if ($vector->layout !== $layoutName || !in_array($vector->id, $directIds, true)) {
-            continue;
+    $direct = \Arp\Tests\NeutralReadCases::replay(
+        $vectors,
+        $layoutName,
+        static function ($vector) use ($catalog, $reader, $targets, $authorizer, $context): array {
+            $projection = $vector->host->projection ?? 'products.catalog';
+            $directHost = new ListGetHost($catalog, $reader, ['demo.products' => $targets[$projection]], $authorizer);
+            return $directHost->invoke(Projection::encode($vector->request), $context);
         }
-        $projection = $vector->host->projection ?? 'products.catalog';
-        $registration = $targets[$projection];
-        $directHost = new ListGetHost($catalog, $reader, ['demo.products' => $registration], $authorizer);
-        $response = $directHost->invoke(Projection::encode($vector->request), $context);
-        $responses[] = ['vector' => $vector->id,'response' => $response];
-        // Array/object representation of the envelope is immaterial after JSON serialization.
-        same(json_decode(json_encode($response)), $vector->expected->response, 'direct ' . $vector->id);
-        $evidence['direct'][] = $vector->id;
+    );
+    array_push($responses, ...$direct['responses']);
+    foreach ($direct['ids'] as $id) {
+        $evidence['direct'][] = $id;
     }
     $operations = ['LIST'];
     $expectFailure($invoke('GET', ['key' => $all[0]['key']]), 'UNAVAILABLE');

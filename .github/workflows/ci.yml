@@ -14,7 +14,7 @@ concurrency:
 
 jobs:
   quality:
-    name: PSR-12 and PHP tests
+    name: Generic core, codecs and PSR-12
     runs-on: ubuntu-latest
 
     container:
@@ -24,6 +24,7 @@ jobs:
     env:
       ARP_CONTRACT_PATH: ${{ github.workspace }}/arp-contract
       ARP_WRITE_CONTRACT_PATH: ${{ github.workspace }}/write-contract
+      ARP_CORE_REPORT: ${{ github.workspace }}/core-contract-report.json
 
     steps:
       - name: Checkout
@@ -57,11 +58,13 @@ jobs:
       - name: PHPCS (PSR-12)
         run: composer lint
 
-      - name: PHP tests
+      - name: Generic PHP tests (known gaps explicitly reported as nonconformant)
         run: composer test
+      - name: Generic conformance matrix (not SQL evidence)
+        run: cat core-contract-report.json
 
   crud-mariadb:
-    name: Real CRUD on MariaDB
+    name: MariaDB adapter and integrated tests
     runs-on: ubuntu-latest
     container:
       image: rsanjose/php851:latest

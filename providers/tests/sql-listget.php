@@ -3,6 +3,8 @@
 declare(strict_types=1);
 
 require __DIR__ . '/../../vendor/autoload.php';
+require __DIR__ . '/../../tests/Support/Contract.php';
+require __DIR__ . '/../../tests/Support/NeutralReadCases.php';
 require __DIR__ . '/../integration/connect.php';
 
 use Alxarafe\Arp\Dictionary\{CatalogBuilder,Source};
@@ -317,22 +319,18 @@ foreach (['composite','simple'] as $layoutName) {
     $failure($call('LIST', new stdClass(), 'unknown-target'), 'UNAVAILABLE');
     check($call('LIST', new stdClass(), 'products.catalog', ['identity' => '','policyRevision' => 'public'])['status']
         === 'success', 'public application');
-    $direct = ['get-unknown-reference','get-simple-typed-key','get-composite-typed-key','get-missing-typed-key',
-        'get-raw-hidden-key-rejected','key-null','key-incomplete','key-reordered','key-extra','key-number-not-string',
-        'key-wrong-type','key-out-of-range','list-limit-zero','list-limit-negative','list-limit-bool',
-        'list-limit-fraction','list-limit-too-large','list-limit-null','list-arbitrary-filter','list-arbitrary-sort',
-        'list-fields-injection','list-offset-rejected','cursor-unknown','cursor-null','client-context-injection',
-        'input-null'];
-    foreach ($vectors->cases as $vector) {
-        if ($vector->layout !== $layoutName || !in_array($vector->id, $direct, true)) {
-            continue;
+    $direct = \Arp\Tests\NeutralReadCases::replay(
+        $vectors,
+        $layoutName,
+        static function ($vector) use ($catalog, $reader, $targets, $authorizer, $context): array {
+            $projection = $vector->host->projection ?? 'products.catalog';
+            $directHost = new ListGetHost($catalog, $reader, ['demo.products' => $targets[$projection]], $authorizer);
+            return $directHost->invoke(Projection::encode($vector->request), $context);
         }
-        $projection = $vector->host->projection ?? 'products.catalog';
-        $directHost = new ListGetHost($catalog, $reader, ['demo.products' => $targets[$projection]], $authorizer);
-        $response = $directHost->invoke(Projection::encode($vector->request), $context);
-        same(json_decode(json_encode($response)), $vector->expected->response, 'direct ' . $vector->id);
-        $responses[] = ['vector' => $vector->id,'response' => $response];
-        $evidence['direct'][] = $vector->id;
+    );
+    array_push($responses, ...$direct['responses']);
+    foreach ($direct['ids'] as $id) {
+        $evidence['direct'][] = $id;
     }
     $operations = ['LIST'];
     $failure($call('GET', ['key' => $all[0]['key']]), 'UNAVAILABLE');

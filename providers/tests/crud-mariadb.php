@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 require __DIR__ . '/../../vendor/autoload.php';
 
+require __DIR__ . '/../../tests/Support/Contract.php';
+require __DIR__ . '/../../tests/Support/AdapterObligations.php';
+
 use Alxarafe\Arp\Dictionary\{CatalogBuilder,Source};
 use Alxarafe\Arp\Dictionary\Internal\Parser;
 use Alxarafe\Arp\Dictionary\Cds\{CrudHost,WriteFailure};
@@ -156,6 +159,24 @@ $seed = static function (array $rows = []) use ($admin): void {
 $rows = static fn() => $admin->query('SELECT CAST(id AS CHAR) id,code,CAST(rating AS CHAR) rating'
     . ' FROM items ORDER BY items.id')->fetchAll(PDO::FETCH_ASSOC);
 $vectors = json_decode(file_get_contents($root . '/fixtures/crud/write/v1/cases.json'), true, 512, JSON_THROW_ON_ERROR);
+$baseRows = array_map(static fn($r) => (array)$r, $vectors['defaults']['rows']);
+$newRow = null;
+foreach ($vectors['cases'] as $vector) {
+    if ($vector['id'] === 'create-valid') {
+        $newRow = $vector['request']['inputs']['values'];
+    }
+}
+$adapterObligations = \Arp\Tests\AdapterObligations::run(
+    $catalog,
+    new MariaDbRecordReader($connect, 2),
+    new MariaDbRecordWriter($connect, 2),
+    'demo.items.public',
+    $seed,
+    $rows,
+    $baseRows,
+    $newRow
+);
+echo 'PASS MariaDB adapter ports: ' . $adapterObligations['count'] . " common obligations (REAL SQL)\n";
 $shared = [];
 $supported = [
     'create-valid','create-duplicate-key','create-required-id','create-required-code','create-required-rating',
@@ -681,6 +702,9 @@ $report = ['contract' => trim(file_get_contents(__DIR__ . '/../../write-contract
     'client' => $admin->getAttribute(PDO::ATTR_CLIENT_VERSION),
     'sharedCases' => $shared,'sharedPassed' => count($supported),'sharedTotal' => count($vectors['cases']),
     'failureEvidence' => $failureResults,'certaintyStatesEvidence' => $certaintyEvidence,
+    'layer' => 'integrated-core-mariadb','persistenceEvidence' => true,
+    'adapterObligations' => $adapterObligations + ['layer' => 'sql-adapter','engine' => 'mariadb',
+        'persistenceEvidence' => true],
     'nativeGroups' => ['vertical-crud','independent-connections','row-lock','field-concurrency','confirmation',
         'authorization','business-validation','check-restriction','foreign-key','cascade-rejection',
         'trigger-rejection','hidden-column-concurrency','protected-read-evidence','rollback','unknown-commit',
