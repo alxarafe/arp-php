@@ -13,7 +13,7 @@ final class ReadResolver
     private const KINDS = ['physical','logical','projections'];
     private array $schemas;
 
-    public function __construct()
+    public function __construct(private readonly bool $writeOperations = false)
     {
         $this->schemas = [];
         foreach (['physical','logical','projection'] as $i => $name) {
@@ -340,7 +340,8 @@ final class ReadResolver
         self::need(!in_array($id, $stack, true), 'REFERENCE_CYCLE', $at . '/source');
         self::need(count($stack) < 64, 'LIMIT', $at . '/source');
         self::need(
-            !array_diff($doc->operations, ['LIST','GET']),
+            !array_diff($doc->operations, $this->writeOperations
+                ? ['LIST','GET','CREATE','UPDATE','DELETE'] : ['LIST','GET']),
             'OPERATION_UNSUPPORTED',
             $at . '/operations',
             'operation-not-allowed'
