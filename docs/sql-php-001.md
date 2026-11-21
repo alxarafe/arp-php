@@ -1,5 +1,9 @@
 # ARP-SQL-PHP-001 — LIST/GET neutral, PDO y MariaDB
 
+**Nota de alcance:** este documento registra la implementación y evidencia anteriores a INTEGER.
+[ARP-INTEGER-002](integer-002.md) y su [matriz](integer-conformance.json) describen el candidato activo;
+las cifras, tipos y revisiones originales que siguen se conservan como evidencia histórica.
+
 ## Estado y autoridad
 
 Rama `feature/arp-sql-php-001`, basada en `main` `43bb5f2` (árbol inicial limpio).

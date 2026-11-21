@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Alxarafe\Arp\Dictionary\Cds;
 
-use Alxarafe\Arp\Dictionary\Internal\{Parser,Scalar,Number};
+use Alxarafe\Arp\Dictionary\Internal\{Parser,Scalar,Number,Integer};
 use Alxarafe\Arp\Dictionary\ExactInteger;
 
 use function array_diff as difference;
@@ -75,9 +75,14 @@ final class ListGetHost
         }
         throw new ReadFailure('CAPABILITY_UNAVAILABLE');
     }
-    public static function scalar(string $type, mixed $value): array
+    public static function scalar(string $type, mixed $value, array|object $constraints = []): array
     {
-        return Scalar::validate(['id' => 'read','type' => $type,'constraints' => new \stdClass()], $value);
+        try {
+            $capacity = $type === 'INTEGER' ? Integer::capacity($constraints) : new \stdClass();
+            return Scalar::validate(['id' => 'read','type' => $type,'constraints' => $capacity], $value);
+        } catch (\Alxarafe\Arp\Dictionary\Internal\Failure $error) {
+            return ['valid' => false,'issues' => [['code' => $error->errorCode]]];
+        }
     }
     private function access(string $target, string $operation, array $context, array $fields): array
     {
@@ -167,7 +172,7 @@ final class ListGetHost
                 self::exact($key, ['reference'], 'INVALID_KEY');
                 self::need(is_string($key->reference) && strlen($key->reference) > 0
                     && strlen($key->reference) <= 128, 'INVALID_KEY');
-                $decoded = $this->open($key->reference, $binding, 'GET', $generation, count($keys));
+                $decoded = $this->open($key->reference, $binding, 'GET', $generation, $keys);
                 $absent = $decoded === null;
                 $position = $decoded['position'] ?? null;
             } else {
@@ -181,7 +186,7 @@ final class ListGetHost
                         $component->field === $column['name'] && $component->type === $column['type'],
                         'INVALID_KEY'
                     );
-                    $decoded = self::scalar($column['type'], $component->value);
+                    $decoded = self::scalar($column['type'], $component->value, $column['constraints']);
                     self::need($decoded['valid'], 'INVALID_KEY');
                     $position[] = $decoded['normalizedValue'];
                 }
@@ -198,7 +203,7 @@ final class ListGetHost
             }
             if (property_exists($inputs, 'continuation')) {
                 self::need(is_string($inputs->continuation), 'INVALID_CURSOR');
-                $decoded = $this->open($inputs->continuation, $binding, 'LIST', $generation, count($keys));
+                $decoded = $this->open($inputs->continuation, $binding, 'LIST', $generation, $keys);
                 self::need($decoded !== null && $decoded['limit'] === $limit, 'INVALID_CURSOR');
                 $position = $decoded['position'];
             }
@@ -235,7 +240,8 @@ final class ListGetHost
             foreach ($rows as $row) {
                 foreach ($keys as $i => $column) {
                     self::need(
-                        isset($row['key'][$i]) && self::scalar($column['type'], $row['key'][$i])['valid'],
+                        isset($row['key'][$i])
+                        && self::scalar($column['type'], $row['key'][$i], $column['constraints'])['valid'],
                         'ROW_IDENTITY_INVALID'
                     );
                 }
@@ -295,7 +301,7 @@ final class ListGetHost
     {
         $payload = pack('J', $generation) . chr($limit);
         foreach ($position as $component) {
-            $payload .= pack('J', (int)$component);
+            $payload .= Integer::packKey($component);
         }
         $nonce = random_bytes(12);
         $tag = '';
@@ -312,7 +318,7 @@ final class ListGetHost
         self::need(is_string($encrypted), 'READ_FAILED');
         return rtrim(strtr(base64_encode($nonce . $tag . $encrypted), '+/', '-_'), '=');
     }
-    private function open(string $token, array $binding, string $purpose, int $generation, int $keyCount): ?array
+    private function open(string $token, array $binding, string $purpose, int $generation, array $keys): ?array
     {
         if (strlen($token) > 128 || !preg_match('/\A[A-Za-z0-9_-]+\z/D', $token)) {
             return null;
@@ -334,12 +340,18 @@ final class ListGetHost
             return null;
         }
         self::need(unpack('J', substr($payload, 0, 8))[1] === $generation, 'GENERATION_EXPIRED');
-        if (intdiv(strlen($payload) - 9, 8) !== $keyCount) {
+        if (intdiv(strlen($payload) - 9, 8) !== count($keys)) {
             return null;
         }
         $position = [];
         for ($i = 9; $i < strlen($payload); $i += 8) {
-            $position[] = (string)unpack('J', substr($payload, $i, 8))[1];
+            $column = $keys[intdiv($i - 9, 8)];
+            $capacity = Integer::derive($column['constraints']);
+            $number = Integer::unpackKey(substr($payload, $i, 8), $capacity['signed']);
+            if (!self::scalar($column['type'], $number, $column['constraints'])['valid']) {
+                return null;
+            }
+            $position[] = $number;
         }
         return ['limit' => ord($payload[8]),'position' => $position];
     }

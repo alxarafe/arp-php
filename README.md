@@ -1,7 +1,7 @@
 # ARP PHP dictionary and CDS read metadata
 
 Standalone Composer library implementing the approved, unpublished ARP-DICT-001
-candidate (`arp.dictionary/v1`), with all 17 scalar types. No ERP, web framework,
+candidate (`arp.dictionary/v1`), with all 11 scalar types and exact INTEGER capacities. No ERP, web framework,
 HTTP, SQL, ORM or persistence is required.
 
 **PHP 8.5 is the minimum supported version**, with no upper-version restriction in Composer. PHP 8.4 and earlier are unsupported. Development and acceptance target PHP 8.5; later versions are permitted but are not automatically certified without tests. The only direct
@@ -90,10 +90,10 @@ Resource violations return `DICTIONARY_LIMIT_EXCEEDED`; unsupported syntax retur
 
 ## Reproduce acceptance tests
 
-The annotated contract candidate tag is `v0.1.0-rc.1`. Its historical scalar commit is
-`4c0f4bd0337c01c15a036910b6462e6f0e674927`. The current `contract.ref` pins
-`7a62bba0e8f84dbc198e837baf63fc7e0d8722e1` for CDS read metadata and the unchanged scalar fixtures.
-The candidate tag is not a final contract release.
+`contract.ref`, `listget-contract.ref` and `write-contract.ref` pin the merged INTEGER contract
+`e3c2c08c93add63faebbe011a7e8e1ec3eccff2c` (arp-contract PR #20).
+[ARP-INTEGER-002](docs/integer-002.md) documents the incompatible type replacement, verified capabilities
+and remaining limitations. Earlier candidate/tag results remain historical evidence; no release is created here.
 Tests read its original manifest and fixtures directly; expected outcomes are
 not copied into this repository. The runner rejects a different SHA or edited
 contract inputs. A deliberately unpaired surrogate fixture is represented as
@@ -103,7 +103,8 @@ Use an independent checkout of that contract commit and set its path:
 
 ```sh
 composer install
-ARP_CONTRACT_PATH=/path/to/pinned/arp-contract composer test
+ARP_CONTRACT_PATH=/path/to/pinned/arp-contract \
+  ARP_WRITE_CONTRACT_PATH=/path/to/pinned/arp-contract composer test
 ARP_CONTRACT_PATH=/path/to/pinned/arp-contract composer test:structure
 ```
 
@@ -120,7 +121,8 @@ docker run --rm --user "$(id -u):$(id -g)" \
 
 docker run --rm --network none --user "$(id -u):$(id -g)" \
   -v "$PWD:/app:ro" -v /path/to/pinned/arp-contract:/contract:ro \
-  -e ARP_CONTRACT_PATH=/contract -w /app arp-php-test-app:latest composer test
+  -e ARP_CONTRACT_PATH=/contract -e ARP_WRITE_CONTRACT_PATH=/contract \
+  -w /app arp-php-test-app:latest composer test
 ```
 
 See [architecture](docs/architecture.md) and [acceptance evidence](docs/conformance.md).
@@ -142,7 +144,8 @@ The pure dictionary/CDS resolver remains usable without SQL, HTTP, ORM or the ad
 
 La lectura neutral y el proveedor opcional MariaDB 12.3 se describen en
 [docs/sql-php-001.md](docs/sql-php-001.md), incluida la ejecución de pruebas sin BD y la integración real opcional.
-El informe registra equivalencias, límites y cobertura de los 88 vectores del contrato fijado por `listget-contract.ref`.
+Ese informe conserva la evidencia anterior. La [matriz INTEGER](docs/integer-conformance.json)
+registra la cobertura actual contra los 93 vectores fijados por `listget-contract.ref`.
 
 ## Estilo de código
 
@@ -157,6 +160,8 @@ composer fix    # aplica las correcciones automáticas
 
 [ARP-CRUD-001B](docs/crud-001b.md) implements a real CREATE/UPDATE/DELETE path over the existing `demo.items`
 definitions, catalog and LIST/GET providers. Writes use parameters, owned transactions, per-field UPDATE checks
-and read-bound DELETE evidence. The [matrix](docs/crud-conformance.json) distinguishes 45 native shared cases
-from the remaining unexecuted vectors; it does not claim complete write conformance or enable pending scalar types.
+and read-bound DELETE evidence. The [current matrix](docs/integer-conformance.json) distinguishes
+52 native shared write cases from 65 unexecuted vectors. The
+[earlier matrix](docs/crud-conformance.json) remains historical evidence.
+INTEGER supports signed/unsigned 8/16/32/64-bit capacities without aliases; complete CRUD conformance is not claimed.
 Run `providers/crud-docker.py` against the clean revision in `write-contract.ref` for reproducible isolated tests.

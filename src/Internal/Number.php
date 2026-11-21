@@ -7,10 +7,12 @@ namespace Alxarafe\Arp\Dictionary\Internal;
 /** Exact base-ten operations. Never passes whole numeric strings to PHP arithmetic. */
 final class Number
 {
-    public const RANGES = ['INT8' => ['-128','127'], 'UINT8' => ['0','255'], 'INT16' => ['-32768','32767'], 'UINT16' => ['0','65535'], 'INT32' => ['-2147483648','2147483647'], 'UINT32' => ['0','4294967295'], 'INT64' => ['-9223372036854775808','9223372036854775807']];
     public static function parse(mixed $value, string $type): string
     {
-        $grammar = $type === 'DECIMAL' ? '-?(0|[1-9][0-9]*)(\.[0-9]+)?' : (str_starts_with($type, 'UINT') ? '(0|[1-9][0-9]*)' : '-?(0|[1-9][0-9]*)');
+        if ($type === 'INTEGER' && is_string($value) && strlen($value) > 4096) {
+            throw new Failure('DICTIONARY_LIMIT_EXCEEDED');
+        }
+        $grammar = $type === 'DECIMAL' ? '-?(0|[1-9][0-9]*)(\.[0-9]+)?' : '-?(0|[1-9][0-9]*)';
         if (!is_string($value) || !preg_match('~\A' . $grammar . '\z~D', $value)) {
             throw new Failure('DICTIONARY_VALUE_TYPE');
         }
@@ -70,17 +72,46 @@ final class Number
         $scale = max(strlen($vf), strlen($df));
         $v = ltrim($vi . str_pad($vf, $scale, '0'), '0') ?: '0';
         $d = ltrim($di . str_pad($df, $scale, '0'), '0') ?: '0';
+        return self::remainder($v, $d) === '0';
+    }
+    public static function remainder(string $v, string $d): string
+    {
         $remainder = '0';
-        for ($i = 0,$n = strlen($v); $i < $n; ++$i) {
+        for ($i = 0, $n = strlen($v); $i < $n; ++$i) {
             $remainder = ltrim($remainder . $v[$i], '0') ?: '0';
             while (self::unsignedCompare($remainder, $d) >= 0) {
                 $remainder = self::subtract($remainder, $d);
             }
         }
-        return $remainder === '0';
+        return $remainder;
     }
-    public static function inRange(string $value, string $type): bool
+    /** Signed integer addition with only single-digit arithmetic. */
+    public static function add(string $a, string $b): string
     {
-        return !isset(self::RANGES[$type]) || (self::compare($value, self::RANGES[$type][0]) >= 0 && self::compare($value, self::RANGES[$type][1]) <= 0);
+        $an = str_starts_with($a, '-');
+        $bn = str_starts_with($b, '-');
+        $a = ltrim($a, '-');
+        $b = ltrim($b, '-');
+        if ($an !== $bn) {
+            $cmp = self::unsignedCompare($a, $b);
+            $value = $cmp >= 0 ? self::subtract($a, $b) : self::subtract($b, $a);
+            return $value !== '0' && ($cmp >= 0 ? $an : $bn) ? '-' . $value : $value;
+        }
+        $out = '';
+        $carry = 0;
+        for ($i = strlen($a) - 1, $j = strlen($b) - 1; $i >= 0 || $j >= 0 || $carry; --$i, --$j) {
+            $n = ($i >= 0 ? ord($a[$i]) - 48 : 0) + ($j >= 0 ? ord($b[$j]) - 48 : 0) + $carry;
+            $out = chr(48 + $n % 10) . $out;
+            $carry = intdiv($n, 10);
+        }
+        return $an && $out !== '0' ? '-' . $out : $out;
+    }
+    public static function inRange(string $value, string $type, array|object $constraints = []): bool
+    {
+        if ($type !== 'INTEGER') {
+            return $type === 'DECIMAL';
+        }
+        $d = Integer::derive($constraints);
+        return self::compare($value, $d['domainMinimum']) >= 0 && self::compare($value, $d['domainMaximum']) <= 0;
     }
 }

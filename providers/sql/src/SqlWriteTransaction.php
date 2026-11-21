@@ -68,7 +68,14 @@ final class SqlWriteTransaction implements WriteTransaction
                     }
                     $result[$name] = null;
                 } else {
-                    $decoded = ListGetHost::scalar($column->scalarType, $raw);
+                    $decoded = ListGetHost::scalar(
+                        $column->scalarType,
+                        $raw,
+                        $column->scalarType === 'INTEGER' ? (object)[
+                            'minimum' => $column->integerRange->minimum,
+                            'maximum' => $column->integerRange->maximum
+                        ] : []
+                    );
                     if (!$decoded['valid']) {
                         throw new WriteFailure('ROW_DECODE_FAILED', 'execution-failure', 'failed');
                     }

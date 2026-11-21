@@ -57,20 +57,23 @@ def main():
         docker('exec', '-e', 'MYSQL_PWD=' + password, database, 'mariadb', '-uroot', 'arpcds', '-e',
                "CREATE TABLE __arp_crud_test_owner(token varchar(64)); INSERT INTO __arp_crud_test_owner VALUES ('"
                + token + "')")
-        container = docker('create', '--label', label + '=' + token, '--network', network,
-                           '--user', f'{os.getuid()}:{os.getgid()}',
-                           '--mount', f'type=bind,src={source},dst=/app,readonly',
-                           '--mount', f'type=bind,src={contract},dst=/write-contract,readonly',
-                           '--mount', f'type=bind,src={output},dst=/reports',
-                           '-e', 'ARP_WRITE_CONTRACT_PATH=/write-contract', '-e', 'ARP_DB_PASSWORD=' + password,
-                           '-e', 'ARP_CRUD_RUN_TOKEN=' + token,
-                           '-e', 'ARP_WRITE_REPORT=/reports/crud-mariadb-report.json',
-                           '-w', '/app', args.php_image, 'php', 'providers/tests/crud-mariadb.php')
-        owned.append(container)
-        result = run('docker', 'start', '-a', container, check=False)
-        (output / 'native.log').write_text(result.stdout.replace(password, '[redacted]'))
-        print(result.stdout, end='')
-        assert json.loads(docker('inspect', container))[0]['State']['ExitCode'] == 0, 'Native validation failed'
+        for phase, script in [('native', 'providers/tests/crud-mariadb.php'),
+                              ('integer', 'providers/tests/integer-mariadb.php')]:
+            container = docker('create', '--label', label + '=' + token, '--network', network,
+                               '--user', f'{os.getuid()}:{os.getgid()}',
+                               '--mount', f'type=bind,src={source},dst=/app,readonly',
+                               '--mount', f'type=bind,src={contract},dst=/write-contract,readonly',
+                               '--mount', f'type=bind,src={output},dst=/reports',
+                               '-e', 'ARP_WRITE_CONTRACT_PATH=/write-contract', '-e', 'ARP_DB_PASSWORD=' + password,
+                               '-e', 'ARP_CRUD_RUN_TOKEN=' + token,
+                               '-e', 'ARP_WRITE_REPORT=/reports/crud-mariadb-report.json',
+                               '-e', 'ARP_INTEGER_REPORT=/reports/integer-mariadb-report.json',
+                               '-w', '/app', args.php_image, 'php', script)
+            owned.append(container)
+            result = run('docker', 'start', '-a', container, check=False)
+            (output / (phase + '.log')).write_text(result.stdout.replace(password, '[redacted]'))
+            print(result.stdout, end='')
+            assert json.loads(docker('inspect', container))[0]['State']['ExitCode'] == 0, 'Native validation failed'
         report['completed'] = True
     finally:
         for container in reversed(owned):

@@ -1,5 +1,9 @@
 # ARP-CDS-READ-002 — Pure read metadata resolver
 
+**Nota de alcance:** este documento registra la implementación y evidencia anteriores a INTEGER.
+[ARP-INTEGER-002](integer-002.md) y su [matriz](integer-conformance.json) describen el candidato activo;
+las cifras, tipos y revisiones originales que siguen se conservan como evidencia histórica.
+
 Reference: `arp-contract/main` at `7a62bba0e8f84dbc198e837baf63fc7e0d8722e1`, recorded in `contract.ref`.
 This implements the approved-for-implementation CDS-READ-001 subset. It is not a normative release claim.
 The scalar RC remains `4c0f4bd0337c01c15a036910b6462e6f0e674927`; its fixtures and schemas are unchanged

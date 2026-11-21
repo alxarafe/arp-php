@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace Alxarafe\Arp\Sql;
 
 use Alxarafe\Arp\Dictionary\Cds\{RecordReader,ReadResult,PreparedRead,ReadPlan,ReadAttempt,ReadFailure,ListGetHost};
-use Alxarafe\Arp\Dictionary\Internal\Number;
 use PDO;
+use Alxarafe\Arp\Dictionary\Internal\Integer;
 
 /** One PDO algorithm; providers override protected SQL, codec and physical-protection details only. */
 abstract class SqlRecordReader implements RecordReader
@@ -44,31 +44,33 @@ abstract class SqlRecordReader implements RecordReader
         $keys = [];
         foreach ($physical->primaryKey as $name) {
             $field = $fields[$name] ?? null;
-            self::need($field !== null && isset(Number::RANGES[$field->type ?? ''])
-                && isset(Number::RANGES[$field->physical->scalarType ?? ''])
+            self::need($field !== null && ($field->type ?? null) === 'INTEGER'
+                && ($field->physical->scalarType ?? null) === 'INTEGER'
                 && ($field->physical->nullable ?? null) === false);
-            $keys[] = ['name' => $name,'type' => $field->type,'nullable' => false];
+            $keys[] = ['name' => $name,'type' => $field->type,'nullable' => false,
+                'constraints' => (array)Integer::capacity($field->constraints)];
         }
         $columns = [];
         foreach ($selected->fields as $field) {
             $stored = $fields[$field->name]->physical;
             $type = $field->type ?? '';
-            self::need(isset(Number::RANGES[$type]) || in_array(
+            self::need($type === 'INTEGER' || in_array(
                 $type,
                 ['DECIMAL','STRING','TEXT','BOOLEAN','DATE'],
                 true
             ));
             self::need(is_bool($stored->nullable ?? null));
-            $column = ['name' => $field->name,'type' => $type,'nullable' => $stored->nullable];
+            $column = ['name' => $field->name,'type' => $type,'nullable' => $stored->nullable,
+                'constraints' => $type === 'INTEGER' ? (array)Integer::capacity($field->constraints) : []];
             self::need($this->supportsColumn($column, $stored));
             $columns[] = $column;
         }
         $restrictions = [];
         foreach ($equalities as $name => $value) {
             $field = $fields[$name] ?? null;
-            self::need($field !== null && isset(Number::RANGES[$field->type ?? ''])
-                && isset(Number::RANGES[$field->physical->scalarType ?? '']));
-            $decoded = ListGetHost::scalar($field->type, $value);
+            self::need($field !== null && ($field->type ?? null) === 'INTEGER'
+                && ($field->physical->scalarType ?? null) === 'INTEGER');
+            $decoded = ListGetHost::scalar($field->type, $value, $field->constraints);
             self::need($decoded['valid']);
             $restrictions[$name] = $decoded['normalizedValue'];
         }
@@ -76,8 +78,7 @@ abstract class SqlRecordReader implements RecordReader
     }
     protected function supportsColumn(array $column, object $physical): bool
     {
-        return ($physical->scalarType ?? null) === $column['type']
-            || isset(Number::RANGES[$physical->scalarType ?? ''], Number::RANGES[$column['type']]);
+        return ($physical->scalarType ?? null) === $column['type'];
     }
     /** Factory must return a newly owned nonpersistent connection, never an application transaction. */
     protected function connection(): PDO
@@ -210,7 +211,7 @@ abstract class SqlRecordReader implements RecordReader
                 if ($value === null) {
                     self::need($column['nullable'], 'ROW_DECODE_FAILED');
                 } else {
-                    $decoded = ListGetHost::scalar($column['type'], $value);
+                    $decoded = ListGetHost::scalar($column['type'], $value, $column['constraints']);
                     self::need($decoded['valid'], 'ROW_DECODE_FAILED');
                     $value = $decoded['normalizedValue'];
                 }
@@ -218,7 +219,7 @@ abstract class SqlRecordReader implements RecordReader
             }
             $key = [];
             foreach ($prepared->keys as $column) {
-                $decoded = ListGetHost::scalar($column['type'], $row[$column['name']] ?? null);
+                $decoded = ListGetHost::scalar($column['type'], $row[$column['name']] ?? null, $column['constraints']);
                 self::need($decoded['valid'], 'ROW_IDENTITY_INVALID');
                 $key[] = $decoded['normalizedValue'];
             }

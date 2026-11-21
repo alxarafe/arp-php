@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Alxarafe\Arp\Sql;
 
 use Alxarafe\Arp\Cds\Physical\ObservationException;
-use Alxarafe\Arp\Dictionary\Internal\Number;
+use Alxarafe\Arp\Dictionary\Internal\Integer;
 use PDO;
 
 /** Bounded metadata plumbing, as in the reference implementations; no record-reading algorithm. */
@@ -105,8 +105,8 @@ final class SqlMetadata
         if ($type !== null) {
             $column->scalarType = $type;
         }
-        if (isset(Number::RANGES[$type ?? ''])) {
-            [$lo,$hi] = Number::RANGES[$type];
+        if ($type === 'INTEGER') {
+            [$lo,$hi] = Integer::domain($fact['integerBits'], $fact['integerSigned']);
             $column->integerRange = (object)['minimum' => $lo,'maximum' => $hi];
         }
         return $column;

@@ -6,17 +6,21 @@ namespace Alxarafe\Arp\Dictionary\Internal;
 
 final class Scalar
 {
-    public const TYPES = ['BOOLEAN','STRING','TEXT','INT8','UINT8','INT16','UINT16','INT32','UINT32','INT64','DECIMAL','UUID','DATE','TIME','DATETIME','ENUM','BINARY'];
+    public const TYPES = ['BOOLEAN','STRING','TEXT','INTEGER','DECIMAL','UUID','DATE','TIME','DATETIME','ENUM',
+        'BINARY'];
     public static function validate(array $element, mixed $value): array
     {
         $id = $element['id'];
         $type = $element['type'];
         $c = (array)$element['constraints'];
         try {
+            if (!in_array($type, self::TYPES, true)) {
+                throw new Failure('DICTIONARY_ELEMENT_INVALID');
+            }
             $normalized = self::normalize($value, $type);
             $failed = [];
-            if (isset(Number::RANGES[$type]) || $type === 'DECIMAL') {
-                if (!Number::inRange($normalized, $type)) {
+            if ($type === 'INTEGER' || $type === 'DECIMAL') {
+                if (!Number::inRange($normalized, $type, $c)) {
                     $failed[] = 'typeRange';
                 }
                 if (isset($c['minimum']) && Number::compare($normalized, $c['minimum']) < (($c['exclusiveMinimum'] ?? false) ? 1 : 0)) {
@@ -72,7 +76,7 @@ final class Scalar
         if (!is_string($value) || preg_match('//u', $value) !== 1) {
             self::invalid();
         }
-        if (isset(Number::RANGES[$type]) || $type === 'DECIMAL') {
+        if ($type === 'INTEGER' || $type === 'DECIMAL') {
             return Number::parse($value, $type);
         }
         if (in_array($type, ['STRING','TEXT','ENUM'], true)) {

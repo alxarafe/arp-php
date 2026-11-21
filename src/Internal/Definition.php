@@ -30,7 +30,15 @@ final class Definition
             self::invalid();
         }
         $c = (array)($e['constraints'] ?? new \stdClass());
-        $numeric = isset(Number::RANGES[$type]) || $type === 'DECIMAL';
+        if ($type === 'INTEGER') {
+            $d = Integer::derive($c);
+            if (array_key_exists('enumValues', $e)) {
+                self::invalid();
+            }
+            $e['constraints'] = (object)array_replace($c, ['bits' => $d['bits'],'signed' => $d['signed']]);
+            return $e;
+        }
+        $numeric = $type === 'DECIMAL';
         $allowed = $numeric ? ['minimum','maximum','multipleOf','exclusiveMinimum','exclusiveMaximum'] : [];
         if ($type === 'DECIMAL') {
             $allowed = array_merge($allowed, ['precision','scale']);

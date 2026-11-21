@@ -79,6 +79,7 @@ jobs:
       ARP_WRITE_CONTRACT_PATH: ${{ github.workspace }}/arp-write-contract
       ARP_DB_PASSWORD: ${{ github.run_id }}-crud-isolated
       ARP_WRITE_REPORT: ${{ github.workspace }}/crud-mariadb-report.json
+      ARP_INTEGER_REPORT: ${{ github.workspace }}/integer-mariadb-report.json
       ARP_CRUD_RUN_TOKEN: ${{ github.run_id }}-${{ github.run_attempt }}
     steps:
       - uses: actions/checkout@v4
@@ -102,5 +103,9 @@ jobs:
           $s->execute([getenv("ARP_CRUD_RUN_TOKEN")]);'
       - name: Real transactions, shared vectors and concurrent sessions
         run: php providers/tests/crud-mariadb.php
+      - name: Exact INTEGER, unsigned 64-bit CRUD and cursor evidence
+        run: php providers/tests/integer-mariadb.php
       - name: Conformance matrix
-        run: cat crud-mariadb-report.json
+        run: |
+          cat crud-mariadb-report.json
+          cat integer-mariadb-report.json

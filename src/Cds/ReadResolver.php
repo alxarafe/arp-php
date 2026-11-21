@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Alxarafe\Arp\Dictionary\Cds;
 
 use Alxarafe\Arp\Dictionary\{Catalog,Source};
-use Alxarafe\Arp\Dictionary\Internal\{Parser,Number,Projection,Failure};
+use Alxarafe\Arp\Dictionary\Internal\{Parser,Number,Projection,Failure,Integer};
 
 /** Pure, bounded CDS metadata compiler. The dictionary must already be validated. */
 final class ReadResolver
@@ -178,15 +178,9 @@ final class ReadResolver
 
     private static function interval(object $constraints): bool
     {
-        foreach ($constraints as $key => $value) {
-            if (
-                !in_array($key, ['minimum','maximum'], true) || !is_string($value) || strlen($value) > 4096
-                || preg_match('/\A-?(?:0|[1-9][0-9]*)\z/D', $value) !== 1
-            ) {
-                return false;
-            }
-        }
-        return true;
+        return !array_diff(array_keys((array)$constraints), [
+            'bits','signed','minimum','maximum','exclusiveMinimum','exclusiveMaximum'
+        ]);
     }
 
     private function physical(object $doc, string $at): void
@@ -210,8 +204,8 @@ final class ReadResolver
             }
             self::need(!isset($values['minimum'], $values['maximum'])
                 || Number::compare($values['minimum'], $values['maximum']) <= 0, 'PHYSICAL_INVALID', $point);
-            if (isset(Number::RANGES[$col->scalarType ?? ''])) {
-                [$lo,$hi] = Number::RANGES[$col->scalarType];
+            if (($col->scalarType ?? null) === 'INTEGER') {
+                [$lo,$hi] = ['-9223372036854775808','18446744073709551615'];
                 foreach ($values as $v) {
                     self::need(Number::compare($lo, $v) <= 0
                     && Number::compare($v, $hi) <= 0, 'PHYSICAL_INVALID', $point);
@@ -253,77 +247,70 @@ final class ReadResolver
             if (isset($element->enumValues)) {
                 $result['enumValues'] = $element->enumValues;
             }
-        } elseif (isset(Number::RANGES[$type ?? ''])) {
-            [$lo,$hi] = Number::RANGES[$type];
-            foreach ($col->integerRange ?? new \stdClass() as $key => $value) {
-                if (Number::compare($value, $key === 'minimum' ? $lo : $hi) !== 0) {
-                    $intrinsic->$key = $value === '-0' ? '0' : $value;
-                }
+        } elseif ($type === 'INTEGER') {
+            if (isset($col->integerRange->minimum, $col->integerRange->maximum)) {
+                $intrinsic = (object)[
+                    'minimum' => self::bound($col->integerRange->minimum, $at),
+                    'maximum' => self::bound($col->integerRange->maximum, $at)
+                ];
+            } else {
+                $type = null;
             }
         }
         if ($type !== null) {
-            $result += ['type' => $type,'intrinsicConstraints' => $intrinsic,
-            'constraints' => clone $intrinsic];
+            $result += ['type' => $type,'intrinsicConstraints' => $intrinsic,'constraints' => clone $intrinsic];
         }
         $context = $overlay->constraints ?? new \stdClass();
         if (isset($overlay->constraints)) {
             $result['contextualConstraints'] = $context;
         }
         if ((array)$context) {
-            self::need(
-                isset(Number::RANGES[$type ?? '']) && self::interval($intrinsic),
-                'PROFILE_UNSUPPORTED',
-                $at . '/constraints'
-            );
+            self::need($type === 'INTEGER' && self::interval($intrinsic), 'PROFILE_UNSUPPORTED', $at . '/constraints');
             self::need(
                 !array_diff(array_keys((array)$context), ['minimum','maximum']),
                 'PROFILE_UNSUPPORTED',
                 $at . '/constraints'
             );
         }
-        if (isset(Number::RANGES[$type ?? '']) && self::interval($intrinsic)) {
-            [$lo,$hi] = Number::RANGES[$type];
-            if (isset($intrinsic->minimum) && Number::compare($intrinsic->minimum, $lo) > 0) {
-                $lo = $intrinsic->minimum;
+        if ($type === 'INTEGER') {
+            try {
+                $d = Integer::derive($intrinsic);
+            } catch (Failure) {
+                self::need(false, 'CONSTRAINT_CONTRADICTION', $at . '/constraints');
             }
-            if (isset($intrinsic->maximum) && Number::compare($intrinsic->maximum, $hi) < 0) {
-                $hi = $intrinsic->maximum;
-            }
+            $lo = $d['minimum'];
+            $hi = $d['maximum'];
+            $result['constraints']->bits = $d['bits'];
+            $result['constraints']->signed = $d['signed'];
             foreach (['minimum','maximum'] as $key) {
                 if (isset($context->$key)) {
                     $value = self::bound($context->$key, $at . '/constraints/' . $key);
                     self::need($key === 'minimum' ? Number::compare($value, $lo) >= 0
-                    : Number::compare($value, $hi) <= 0, 'CONSTRAINT_WEAKENING', $at . '/constraints/' . $key);
+                        : Number::compare($value, $hi) <= 0, 'CONSTRAINT_WEAKENING', $at . '/constraints/' . $key);
                     if ($key === 'minimum') {
                         $lo = $value;
                     } else {
                         $hi = $value;
                     }
-                                    $result['constraints']->$key = $value;
                 }
             }
             self::need(Number::compare($lo, $hi) <= 0, 'CONSTRAINT_CONTRADICTION', $at . '/constraints');
-            if (isset(Number::RANGES[$col->scalarType ?? ''])) {
-                [$plo,$phi] = Number::RANGES[$col->scalarType];
-                if (
-                    isset($col->integerRange->minimum)
-                    && Number::compare($col->integerRange->minimum, $plo) > 0
-                ) {
-                    $plo = $col->integerRange->minimum;
-                }
-                if (
-                    isset($col->integerRange->maximum)
-                    && Number::compare($col->integerRange->maximum, $phi) < 0
-                ) {
-                    $phi = $col->integerRange->maximum;
-                }
+            $result['constraints']->minimum = $lo;
+            $result['constraints']->maximum = $hi;
+            unset($result['constraints']->exclusiveMinimum, $result['constraints']->exclusiveMaximum);
+            if (($col->scalarType ?? null) === 'INTEGER' && self::interval($intrinsic)) {
+                $plo = $col->integerRange->minimum ?? null;
+                $phi = $col->integerRange->maximum ?? null;
                 self::need(
-                    Number::compare($plo, $lo) <= 0 && Number::compare($hi, $phi) <= 0,
+                    ($plo === null || Number::compare($plo, $lo) <= 0)
+                    && ($phi === null || Number::compare($hi, $phi) <= 0),
                     'DOMAIN_NOT_REPRESENTABLE',
                     $at,
                     'physical-incompatible'
                 );
-                $result['compatibility'] = 'compatible';
+                if ($plo !== null && $phi !== null) {
+                    $result['compatibility'] = 'compatible';
+                }
             }
         }
         foreach (['label','description','hint'] as $key) {

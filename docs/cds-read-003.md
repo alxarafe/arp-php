@@ -1,5 +1,9 @@
 # ARP-CDS-READ-003 — Physical observation provider
 
+**Nota de alcance:** este documento registra la implementación y evidencia anteriores a INTEGER.
+[ARP-INTEGER-002](integer-002.md) y su [matriz](integer-conformance.json) describen el candidato activo;
+las cifras, tipos y revisiones originales que siguen se conservan como evidencia histórica.
+
 Reference: `arp-contract/main`, CDS-READ-001, pinned at
 `7a62bba0e8f84dbc198e837baf63fc7e0d8722e1` by the existing `contract.ref`.
 Neither the contract, its fixtures, the pure resolver nor the scalar APIs are modified.
