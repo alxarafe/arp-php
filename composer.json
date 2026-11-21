@@ -34,7 +34,9 @@
       "@test:cds-read",
       "@test:listget",
       "@test:crud",
-      "@test:integer"
+      "@test:integer",
+      "@test:core:baseline",
+      "@test:adapter-port"
     ],
     "test:conformance": "@php tests/conformance.php",
     "test:runtime": "@php tests/runtime.php",
@@ -44,6 +46,9 @@
     "lint": "@php vendor/bin/phpcs",
     "fix": "@php vendor/bin/phpcbf",
     "test:crud": "@php tests/crud.php",
-    "test:integer": "@php tests/integer.php"
+    "test:integer": "@php tests/integer.php",
+    "test:core": "@php tests/core-contract.php",
+    "test:core:baseline": "@php tests/core-contract.php --allow-known-gaps",
+    "test:adapter-port": "@php tests/adapter-port.php"
   }
 }
