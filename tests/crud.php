@@ -20,7 +20,7 @@ $manifest = json_decode(
     JSON_THROW_ON_ERROR
 );
 $pin = trim(file_get_contents(__DIR__ . '/../write-contract.ref'));
-check($pin === 'c1831e2580a0d92ad3ead1deff719162a8e615e3', 'reviewed neutral write contract pin');
+check($pin === 'e3c2c08c93add63faebbe011a7e8e1ec3eccff2c', 'reviewed neutral write contract pin');
 foreach ($manifest['reuse'] as $reference) {
     check(hash_file('sha256', $root . '/' . $reference['path']) === $reference['sha256'], 'unchanged shared fixtures');
     $source = json_decode(file_get_contents($root . '/' . $reference['path']), true, 512, JSON_THROW_ON_ERROR);
@@ -41,7 +41,7 @@ foreach ($codecs as $case) {
                 $result = ['valid' => true,'value' => null];
             } else {
                 $value = Scalar::validate(['id' => 'codec','type' => $case['type'],
-                    'constraints' => new stdClass()], $decoded->value);
+                    'constraints' => (object)($case['constraints'] ?? [])], $decoded->value);
                 if ($value['valid']) {
                     $result = ['valid' => true,'value' => $value['normalizedValue']];
                 }

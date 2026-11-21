@@ -49,7 +49,8 @@ final readonly class MemoryPrepared extends PreparedRead
     {
         parent::__construct(
             [['name' => 'name','type' => 'STRING','nullable' => false]],
-            [['name' => 'id','type' => 'INT64','nullable' => false]],
+            [['name' => 'id','type' => 'INTEGER','nullable' => false,
+                'constraints' => ['bits' => 64,'signed' => true]]],
             []
         );
     }
@@ -127,7 +128,7 @@ check($reader->events === ['open','commit','close'], 'mandatory commit and close
 $reference = $first['output']['records'][0]['key']['reference'];
 check(strlen($reference) <= 128 && !str_contains($reference, '922337'), 'opaque token');
 $get = ['target' => 't','operation' => 'GET','inputs' => ['key' => ['reference' => $reference]]];
-check($invoke($get)['output']['record']['values']->name === 'min', 'signed INT64 token roundtrip');
+check($invoke($get)['output']['record']['values']->name === 'min', 'signed INTEGER token roundtrip');
 check($invoke($get, ['identity' => 'other','policyRevision' => '1'])['output'] === ['found' => false], 'context binding');
 $wrong = $get;
 $wrong['inputs']['key']['reference'] = $first['output']['page']['next'];

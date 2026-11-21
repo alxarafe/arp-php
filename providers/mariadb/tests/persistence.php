@@ -226,7 +226,7 @@ foreach (glob($directory . '/*') as $file) {
 $groups[] = 'secret-integrity';
 $exact = PhysicalYaml::decode(file_get_contents($path), $key);
 $exact->columns[0]->nativeType = 'bigint';
-$exact->columns[0]->scalarType = 'INT64';
+$exact->columns[0]->scalarType = 'INTEGER';
 $exact->columns[0]->integerRange = (object)['minimum' => '-9223372036854775808','maximum' => '9223372036854775807'];
 $exact->columns[1]->characterLength->value = new ExactInteger('9223372036854775807');
 check(str_contains(PhysicalYaml::encode($exact, $key), '9223372036854775807'), 'exact integer codec');

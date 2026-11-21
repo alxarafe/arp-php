@@ -221,9 +221,9 @@ $additional[] = 'unrepresentable-index-presence';
 $admin->exec('CREATE TABLE types_test(wide BIGINT UNSIGNED, tiny TINYINT(1), amount DECIMAL(20,4),
     generated INT AS (1) STORED, ident INT PRIMARY KEY AUTO_INCREMENT)');
 $types = $observer('types_test')->observe();
-check(!isset($types->columns[0]->scalarType), 'no invented UINT64');
+same($types->columns[0]->scalarType, 'INTEGER', 'observed unsigned 64 INTEGER');
 same($types->columns[0]->integerRange->maximum, '18446744073709551615', 'exact unsigned extent');
-same($types->columns[1]->scalarType, 'INT8', 'tinyint width is not boolean');
+same($types->columns[1]->scalarType, 'INTEGER', 'tinyint width is not boolean');
 same($types->columns[2]->scalarType, 'DECIMAL', 'decimal scalar codec fact; editing domain remains unverified');
 same($types->columns[2]->decimalGeometry, (object)['precision' => 20,'scale' => 4], 'observed geometry');
 check($types->columns[3]->generated && $types->columns[4]->identity, 'generated/identity flags');
@@ -310,7 +310,7 @@ $narrowInput->logical->model->fields->id = (object)['dictionary' => 'test.int32'
 $narrowAuthored = Projection::encode($narrowInput);
 $narrowed = new PhysicalCatalog($dictionary, $narrowInput, ['storage' => $observer('items')]);
 $beforeNarrowing = $narrowed->resolve();
-check($beforeNarrowing->valid, 'explicit INT32 before narrowing');
+check($beforeNarrowing->valid, 'explicit 32-bit INTEGER before narrowing');
 $admin->exec('DROP VIEW view_test');
 $admin->exec('ALTER TABLE items MODIFY COLUMN id SMALLINT NOT NULL');
 $narrowed->invalidate();
@@ -324,7 +324,7 @@ check($narrowed->current() === null && Projection::encode($narrowInput) === $nar
     && Projection::encode($definitions) === $original, 'authored definitions preserved');
 same(
     $beforeNarrowing->projection()->models[0]->fields[1]->physical->scalarType,
-    'INT32',
+    'INTEGER',
     'old snapshot immutable after DDL'
 );
 $additional[] = 'real-narrowing-incompatible';

@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Alxarafe\Arp\Cds\Physical;
 
-use Alxarafe\Arp\Dictionary\Internal\Number;
+use Alxarafe\Arp\Dictionary\Internal\Integer;
 use PDO;
 use PDOException;
 
@@ -142,10 +142,7 @@ abstract readonly class MySqlObservationProviderBase implements PhysicalObservat
                     'generated' => $row['IS_GENERATED'] === 'ALWAYS'];
                 $unsigned = str_contains($row['COLUMN_TYPE'], 'unsigned');
                 $type = match ($row['DATA_TYPE']) {
-                    'tinyint' => $unsigned ? 'UINT8' : 'INT8',
-                    'smallint' => $unsigned ? 'UINT16' : 'INT16',
-                    'int' => $unsigned ? 'UINT32' : 'INT32',
-                    'bigint' => $unsigned ? null : 'INT64',
+                    'tinyint','smallint','int','bigint' => 'INTEGER',
                     'char','varchar' => 'STRING',
                     'decimal' => 'DECIMAL',
                     'date' => 'DATE',
@@ -162,13 +159,11 @@ abstract readonly class MySqlObservationProviderBase implements PhysicalObservat
                 if ($type !== null) {
                     $column->scalarType = $type;
                 }
-                if ($type !== null && isset(Number::RANGES[$type])) {
-                    [$lo,$hi] = Number::RANGES[$type];
+                if ($type === 'INTEGER') {
+                    $bits = ['tinyint' => 8,'smallint' => 16,'int' => 32,'bigint' => 64]
+                        [$row['DATA_TYPE']];
+                    [$lo,$hi] = Integer::domain($bits, !$unsigned);
                     $column->integerRange = (object)['minimum' => $lo,'maximum' => $hi];
-                }
-                if (!$hasChecks && $row['DATA_TYPE'] === 'bigint' && $unsigned) {
-                    // UINT64 has no portable DICT-001 counterpart: preserve the observed extent without inventing one.
-                    $column->integerRange = (object)['minimum' => '0','maximum' => '18446744073709551615'];
                 }
                 if ($type === 'STRING' && $row['CHARACTER_MAXIMUM_LENGTH'] !== null) {
                     $column->characterLength = (object)['value' => (int)$row['CHARACTER_MAXIMUM_LENGTH'],

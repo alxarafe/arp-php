@@ -122,7 +122,7 @@ $host = new CrudHost(
     }
 );
 $context = ['identity' => 'demo-public','policyRevision' => 'p1'];
-$key = (object)['components' => [(object)['field' => 'id','type' => 'INT32','value' => '7']]];
+$key = (object)['components' => [(object)['field' => 'id','type' => 'INTEGER','value' => '7']]];
 $invoke = static fn($operation, $inputs, $target = 'demo.items') => $host->invoke(encode(
     ['target' => $target,'operation' => $operation,'inputs' => $inputs]
 ), $context);
@@ -167,7 +167,7 @@ $supported = [
     'create-null-inputs','create-client-trust-context','create-unknown-target','create-negative-zero-canonical',
     'delete-valid','delete-absent','delete-no-precondition','delete-unknown-evidence',
     'delete-expired-evidence','delete-stale-precondition','delete-concurrent-change','delete-historical-value',
-    'delete-rounded-key','delete-pending-integer','update-demo-partial','update-demo-independent-change',
+    'delete-rounded-key','delete-legacy-type-rejected','update-demo-partial','update-demo-independent-change',
     'update-demo-noop','update-demo-historical-omitted','update-demo-historical-resent','update-primary-key-immutable',
     'update-conflict-after-interleave'
 ];

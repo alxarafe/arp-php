@@ -67,14 +67,16 @@ final readonly class SqlServerObservationProvider implements PhysicalObservation
                     $native .= '(' . $fact['precision'] . ',' . $fact['scale'] . ')';
                 }
                 $scalar = $checks || $fact['is_user_defined'] !== '0' ? null : match ($type) {
-                    'tinyint'=>'UINT8','smallint'=>'INT16','int'=>'INT32','bigint'=>'INT64','bit'=>'BOOLEAN',
+                    'tinyint','smallint','int','bigint'=>'INTEGER','bit'=>'BOOLEAN',
                     'date'=>'DATE','decimal','numeric'=>'DECIMAL',
                     'varchar','nvarchar'=>$length === -1 ? 'TEXT' : 'STRING','char','nchar'=>'STRING',
                     'text','ntext'=>'TEXT',default=>null
                 };
                 $column = SqlMetadata::column(['name' => $fact['name'],'nativeType' => $native,
                     'ordinal' => $fact['column_id'],'nullable' => $fact['is_nullable'] === '1',
-                    'identity' => $fact['is_identity'] === '1','generated' => $fact['is_computed'] === '1'], $scalar);
+                    'identity' => $fact['is_identity'] === '1','generated' => $fact['is_computed'] === '1',
+                    'integerBits' => ['tinyint' => 8,'smallint' => 16,'int' => 32,'bigint' => 64][$type] ?? null,
+                    'integerSigned' => $type !== 'tinyint'], $scalar);
                 if ($checks && $column->nullable) {
                     unset($column->nullable);
                 }

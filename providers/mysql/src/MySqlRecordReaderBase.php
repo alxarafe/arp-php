@@ -105,7 +105,7 @@ abstract class MySqlRecordReaderBase extends SqlRecordReader
             return false;
         }
         return $column['type'] === 'BOOLEAN'
-            ? ($physical->scalarType ?? null) === 'INT8' && str_starts_with($physical->nativeType, 'tinyint')
+            ? ($physical->scalarType ?? null) === 'INTEGER' && str_starts_with($physical->nativeType, 'tinyint')
             : parent::supportsColumn($column, $physical);
     }
 }

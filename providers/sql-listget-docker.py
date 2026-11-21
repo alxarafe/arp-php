@@ -26,8 +26,7 @@ def main():
     args = parser.parse_args()
     source = Path(__file__).resolve().parents[1]
     output = args.output.resolve()
-    auxiliary = Path.home() / 'Desarrollo/tmp'
-    assert output.is_relative_to(auxiliary), 'Auxiliary output must be under ~/Desarrollo/tmp'
+    assert not output.is_relative_to(source) and not source.is_relative_to(output), 'Reports must be outside source'
     output.mkdir(parents=True, exist_ok=True)
     mounts = []
     for path, pin, destination in [(args.contract, 'contract.ref', '/contract'),

@@ -1,5 +1,9 @@
 # ARP-CRUD-001B — Primer recorrido real PHP/MariaDB
 
+**Nota de alcance:** este documento registra la implementación y evidencia anteriores a INTEGER.
+[ARP-INTEGER-002](integer-002.md) y su [matriz](integer-conformance.json) describen el candidato activo;
+las cifras, tipos y revisiones originales que siguen se conservan como evidencia histórica.
+
 **Estado:** implementación para revisión; sin fusión automática, versión, etiqueta ni release.
 **Base PHP:** `ba69e467f55c6a8658361e32c3b350ce2d45a9aa`.
 **Contrato de escritura:** `c1831e2580a0d92ad3ead1deff719162a8e615e3`, PR #19 fusionada.

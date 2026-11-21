@@ -161,7 +161,9 @@ final class CrudHost
             return null;
         }
         $element = ['id' => $field->name,'type' => $field->type,
-            'constraints' => $historical ? new \stdClass() : $field->constraints];
+            'constraints' => $historical && $field->type === 'INTEGER'
+                ? \Alxarafe\Arp\Dictionary\Internal\Integer::capacity($field->constraints)
+                : ($historical ? new \stdClass() : $field->constraints)];
         $decoded = Scalar::validate($element, $value);
         WriteFailure::need($decoded['valid'], 'INVALID_VALUE', 'invalid-data');
         return $decoded['normalizedValue'];
@@ -258,7 +260,7 @@ final class CrudHost
                     'INVALID_KEY',
                     'invalid-data'
                 );
-                $decoded = ListGetHost::scalar($fields[$name]->type, $component->value);
+                $decoded = ListGetHost::scalar($fields[$name]->type, $component->value, $fields[$name]->constraints);
                 WriteFailure::need($decoded['valid'], 'INVALID_KEY', 'invalid-data');
                 $key[] = $decoded['normalizedValue'];
                 $components[] = ['field' => $name,'type' => $fields[$name]->type,'value' => end($key)];

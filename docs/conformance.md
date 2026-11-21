@@ -1,5 +1,9 @@
 # ARP-DICT-001 PHP acceptance evidence
 
+**Nota de alcance:** este documento registra la implementación y evidencia anteriores a INTEGER.
+[ARP-INTEGER-002](integer-002.md) y su [matriz](integer-conformance.json) describen el candidato activo;
+las cifras, tipos y revisiones originales que siguen se conservan como evidencia histórica.
+
 ## PHP runtime support policy (2026-11-15)
 
 The **supported minimum PHP version is 8.5** (`composer.json`: `>=8.5`); there is no upper-version constraint. PHP 8.4 and earlier are **not supported**, even though the earlier PHP 8.4.26 execution results remain recorded below as historical test evidence. Passing those historical tests does not extend the support policy. PHP 8.6 or newer is permitted by the Composer constraint but must be tested separately before any conformance claim.

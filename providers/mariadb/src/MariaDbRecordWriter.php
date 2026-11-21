@@ -30,7 +30,7 @@ class MariaDbRecordWriter extends MariaDbRecordReader implements RecordWriter
             $columns = [];
             foreach ($model->fields as $field) {
                 $column = $field->physical;
-                WriteFailure::need(isset(Number::RANGES[$column->scalarType ?? ''])
+                WriteFailure::need(($column->scalarType ?? null) === 'INTEGER'
                     || in_array($column->scalarType ?? '', ['STRING','TEXT'], true), 'CAPABILITY_UNAVAILABLE');
                 WriteFailure::need(is_bool($column->nullable ?? null)
                     && !($column->generated ?? false) && !($column->identity ?? false), 'CAPABILITY_UNAVAILABLE');

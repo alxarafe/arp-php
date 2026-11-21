@@ -1,5 +1,9 @@
 # ARP-SQL-PHP-002 — Cuatro motores PDO con un único LIST/GET
 
+**Nota de alcance:** este documento registra la implementación y evidencia anteriores a INTEGER.
+[ARP-INTEGER-002](integer-002.md) y su [matriz](integer-conformance.json) describen el candidato activo;
+las cifras, tipos y revisiones originales que siguen se conservan como evidencia histórica.
+
 ## Preparación y alcance
 
 Rama `feature/arp-sql-php-002`, base `main` `c140c60d05cf00ec42b0373c8850690979b368ec`, con PR #9 fusionada.

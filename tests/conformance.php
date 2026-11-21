@@ -133,7 +133,7 @@ function build(object $document): \Alxarafe\Arp\Dictionary\BuildResult
 }
 $manifest = fixture($dir . 'manifest.json');
 $base = build(fixture($dir . $manifest->sets->catalog));
-check('catalog', '17-type-catalog', $base->jsonSerialize(), (object)['valid' => true,'issues' => []]);
+check('catalog', 'INTEGER-catalog', $base->jsonSerialize(), (object)['valid' => true,'issues' => []]);
 foreach (fixture($dir . $manifest->sets->values) as $v) {
     $result = build((object)['apiVersion' => $manifest->apiVersion,'elements' => [$v->element]]);
     if (!$result->isValid()) {
@@ -188,6 +188,30 @@ foreach (fixture($dir . $manifest->sets->catalogs) as $scenario) {
             throw new RuntimeException('Unimplemented fixture operation ' . $step->operation);
         }
     }
+}
+foreach (fixture($dir . $manifest->sets->integer)->definitions as $case) {
+    $result = build((object)['apiVersion' => $manifest->apiVersion,'elements' => [(object)[
+        'id' => 'test.integer','type' => 'INTEGER','constraints' => $case->constraints
+    ]]]);
+    $actual = ['valid' => $result->isValid()];
+    if ($result->isValid()) {
+        $descriptor = $result->catalog->resolve('test.integer')['descriptor'];
+        $d = \Alxarafe\Arp\Dictionary\Internal\Integer::derive($descriptor->constraints);
+        $actual += ['signed' => $descriptor->constraints->signed,'bits' => $descriptor->constraints->bits,
+            'minimum' => $d['minimum'],'maximum' => $d['maximum']];
+    } elseif ($result->catalog !== null || $result->issues[0]['code'] !== 'DICTIONARY_ELEMENT_INVALID') {
+        throw new RuntimeException('Definition did not reject atomically: ' . $case->id);
+    }
+    check('integer-definitions', $case->id, $actual, $case->expected);
+}
+foreach (fixture($dir . $manifest->sets->integer)->values as $case) {
+    $result = build((object)['apiVersion' => $manifest->apiVersion,'elements' => [(object)[
+        'id' => 'test.integer','type' => 'INTEGER','constraints' => $case->constraints
+    ]]]);
+    if (!$result->isValid()) {
+        throw new RuntimeException('Invalid INTEGER value definition: ' . $case->id);
+    }
+    check('integer-values', $case->id, $result->catalog->validate('test.integer', $case->value), $case->expected);
 }
 foreach ($counts as $group => $c) {
     echo "$group: " . ($c['passed'] ?? 0) . " passed, " . ($c['failed'] ?? 0) . " failed\n";
