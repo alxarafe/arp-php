@@ -58,7 +58,9 @@ jobs:
       - name: PHPCS (PSR-12)
         run: composer lint
 
-      - name: Generic PHP tests (known gaps explicitly reported as nonconformant)
+      - name: Strict core contract conformance (mandatory)
+        run: composer test:core
+      - name: Generic PHP regression suite
         run: composer test
       - name: Generic conformance matrix (not SQL evidence)
         run: cat core-contract-report.json

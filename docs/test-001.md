@@ -1,5 +1,8 @@
 # ARP-TEST-001 — Núcleo CRUD, adaptadores SQL e integración
 
+**Evidencia histórica de ARP-TEST-001:** [ARP-TEST-002](test-002.md) cierra las dos brechas y elimina
+las excepciones. Las cifras y comandos de este documento describen la revisión anterior.
+
 **Estado:** pruebas para revisión; sin fusión automática, etiquetas ni versiones.
 **Base:** `507f3e6`, main actualizado tras ARP-INTEGER-002. Rama independiente `feature/arp-test-001`.
 **Contrato intacto:** `e3c2c08c93add63faebbe011a7e8e1ec3eccff2c`; los tres pins permanecen iguales.
