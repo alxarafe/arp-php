@@ -419,8 +419,32 @@ class CommitFault extends PDO
 {
     public string $mode = '';
     public ?Closure $after = null;
+    public int $beginCalls = 0;
+    public int $commitCalls = 0;
+    public int $rollbackCalls = 0;
+    public bool $probeFails = false;
+    public function beginTransaction(): bool
+    {
+        ++$this->beginCalls;
+        if ($this->mode === 'begin-throw') {
+            throw new PDOException('private failure before beginning transaction');
+        }
+        $result = parent::beginTransaction();
+        if ($this->mode === 'begin-ack-lost') {
+            throw new PDOException('private begin acknowledgement lost before any action');
+        }
+        return $result;
+    }
+    public function inTransaction(): bool
+    {
+        if ($this->probeFails) {
+            throw new PDOException('private transaction probe unavailable');
+        }
+        return parent::inTransaction();
+    }
     public function commit(): bool
     {
+        ++$this->commitCalls;
         if (in_array($this->mode, ['before','rollback-unproven'], true)) {
             throw new PDOException('private commit exception');
         }
@@ -433,8 +457,12 @@ class CommitFault extends PDO
     }
     public function rollBack(): bool
     {
+        ++$this->rollbackCalls;
         $result = parent::rollBack();
-        if ($this->mode === 'rollback-unproven') {
+        if ($this->mode === 'probe-after-close') {
+            $this->probeFails = true;
+        }
+        if (in_array($this->mode, ['rollback-unproven','metadata-rollback-unproven'], true)) {
             throw new PDOException('private rollback acknowledgement lost');
         }
         return $result;
@@ -528,16 +556,136 @@ check(
     'optional application-owned validator'
 );
 echo "PASS real rollback, actual commit with lost acknowledgement, uncertain rollback, publication and no-op DML\n";
+// Faults run against owned real PDO connections; no alternate production fault API is added.
+final class SetupFaultWriter extends MariaDbRecordWriter
+{
+    public ?WriteFailure $setupFailure = null;
+    public string $point = 'before-begin';
+    protected function execute(PDO $connection, string $sql, array $parameters = []): array
+    {
+        $before = $sql === 'SET TRANSACTION READ WRITE';
+        $active = str_contains($sql, 'FROM information_schema.TRIGGERS');
+        if ($this->setupFailure !== null && ($this->point === 'before-begin' ? $before : $active)) {
+            throw $this->setupFailure;
+        }
+        return parent::execute($connection, $sql, $parameters);
+    }
+}
+$stateData = null;
+$stateMode = '';
+$stateConnections = 0;
+$stateConnect = static function () use ($password, &$stateData, &$stateMode, &$stateConnections): PDO {
+    $connection = new CommitFault('mysql:host=db;dbname=arpcds;charset=utf8mb4', 'root', $password);
+    if (++$stateConnections === 1) {
+        $stateData = $connection;
+        $stateData->mode = $stateMode;
+    }
+    $connection->setAttribute(PDO::ATTR_STATEMENT_CLASS, [WriteTrace::class]);
+    return $connection;
+};
+$certaintyEvidence = [];
+$beforeStateTests = $rows();
+foreach (
+    [
+    ['before-begin-capability', 'before-begin', '', 'CAPABILITY_UNAVAILABLE', 'operation-not-allowed', 0, 0],
+    ['before-begin-validation', 'before-begin', '', 'INVALID_VALUE', 'invalid-data', 0, 0],
+    ['begin-failed-before-start', 'none', 'begin-throw', 'PERSISTENCE_FAILED', 'execution-failure', 1, 0],
+    ['begin-ack-lost-without-action', 'none', 'begin-ack-lost', 'PERSISTENCE_FAILED', 'execution-failure', 1, 1],
+    ['active-metadata-cleanup-unproven', 'active', 'metadata-rollback-unproven',
+        'CAPABILITY_UNAVAILABLE', 'operation-not-allowed', 1, 1],
+    ] as [$name, $point, $stateMode, $code, $family, $begins, $rollbacks]
+) {
+    $stateConnections = 0;
+    WriteTrace::$sql = [];
+    $writer = new SetupFaultWriter($stateConnect, 2);
+    $writer->point = $point;
+    $original = null;
+    if ($point !== 'none') {
+        $original = new WriteFailure($code, $family);
+        $writer->setupFailure = $original;
+    }
+    $actions = 0;
+    try {
+        $writer->transaction(
+            $catalog->resolve(),
+            'demo.items.public',
+            new stdClass(),
+            static function ($tx) use (&$actions): array {
+                ++$actions;
+                return [];
+            },
+            static fn() => null
+        );
+        throw new RuntimeException($name . ' should fail');
+    } catch (WriteFailure $error) {
+        check($error->errorCode === $code && $error->family === $family, $name . ' preserves known diagnosis');
+        if ($original !== null) {
+            check($error === $original, $name . ' original exception is retained');
+        }
+        check($actions === 0 && $stateData->beginCalls === $begins && $stateData->rollbackCalls === $rollbacks
+            && $stateData->commitCalls === 0 && WriteTrace::$sql === [], $name . ' no action or DML');
+        $certaintyEvidence[$name] = ['response' => $error->response(),'beginCalls' => $begins,
+            'rollbackCalls' => $rollbacks,'actionCalls' => $actions,'dmlCount' => count(WriteTrace::$sql)];
+    }
+}
+foreach (
+    [
+    ['after-noop-capability', '', new WriteFailure('CAPABILITY_UNAVAILABLE')],
+    ['after-noop-validation', '', new WriteFailure('INVALID_VALUE', 'invalid-data')],
+    ['after-noop-access-revoked', '', new WriteFailure('UNAVAILABLE')],
+    ['after-noop-probe-failed', 'probe-after-close', new WriteFailure('INVALID_VALUE', 'invalid-data')],
+    ['after-noop-generic-failure', '', new RuntimeException('private publication failure')],
+    ] as [$name, $stateMode, $original]
+) {
+    $stateConnections = 0;
+    WriteTrace::$sql = [];
+    $checks = 0;
+    $actions = 0;
+    try {
+        (new MariaDbRecordWriter($stateConnect, 2))->transaction(
+            $catalog->resolve(),
+            'demo.items.public',
+            new stdClass(),
+            static function ($tx) use (&$actions): array {
+                ++$actions;
+                return ['changed' => false];
+            },
+            static function () use (&$checks, $original): void {
+                if (++$checks === 3) {
+                    throw $original;
+                }
+            }
+        );
+        throw new RuntimeException($name . ' should fail');
+    } catch (WriteFailure $error) {
+        if ($original instanceof WriteFailure) {
+            check($error === $original, $name . ' retains original capability/validation diagnosis');
+        } else {
+            check($error->errorCode === 'PERSISTENCE_FAILED' && $error->family === 'execution-failure'
+                && $error->status === 'failed', $name . ' is a known nonmutation failure');
+        }
+        check(
+            $actions === 1 && $checks === 3 && $stateData->beginCalls === 1
+            && $stateData->rollbackCalls === 1 && $stateData->commitCalls === 0 && WriteTrace::$sql === [],
+            $name . ' completed without DML and never attempted commit'
+        );
+        $certaintyEvidence[$name] = ['response' => $error->response(),'beginCalls' => 1,
+            'rollbackCalls' => 1,'actionCalls' => $actions,'dmlCount' => count(WriteTrace::$sql)];
+    }
+}
+check($rows() === $beforeStateTests, 'certainty regressions leave actual persistence unchanged');
+echo 'PASS ' . count($certaintyEvidence)
+    . " explicit transaction certainty regressions; original diagnoses preserved\n";
 $report = ['contract' => trim(file_get_contents(__DIR__ . '/../../write-contract.ref')),
     'engine' => $admin->query('SELECT VERSION()')->fetchColumn(),'php' => PHP_VERSION,
     'client' => $admin->getAttribute(PDO::ATTR_CLIENT_VERSION),
     'sharedCases' => $shared,'sharedPassed' => count($supported),'sharedTotal' => count($vectors['cases']),
-    'failureEvidence' => $failureResults,
+    'failureEvidence' => $failureResults,'certaintyStatesEvidence' => $certaintyEvidence,
     'nativeGroups' => ['vertical-crud','independent-connections','row-lock','field-concurrency','confirmation',
         'authorization','business-validation','check-restriction','foreign-key','cascade-rejection',
         'trigger-rejection','hidden-column-concurrency','protected-read-evidence','rollback','unknown-commit',
         'unknown-rollback','connection-loss','postcommit-revocation','no-op-zero-dml','partial-set',
-        'parameterized-values']];
+        'parameterized-values','certainty-states']];
 if ($destination = getenv('ARP_WRITE_REPORT')) {
     file_put_contents($destination, json_encode($report, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
 }

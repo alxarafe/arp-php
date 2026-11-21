@@ -20,7 +20,7 @@ No se afirma conformidad integral con los 110 vectores ni implementación genera
 
 Se ejecutan **11 vectores originales de codec** y se verifican identidades/hashes de los **76 vectores UPDATE
 históricos referenciados**, sin duplicarlos. Verificar sus hashes no equivale a ejecutar esos 76 escenarios en PHP.
-Se añaden **21 grupos de evidencia nativa**, incluidos concurrencia, confirmación, integridad y fallos reales de
+Se añaden **22 grupos de evidencia nativa**, incluidos concurrencia, confirmación, integridad y fallos reales de
 conexión. Algunos cubren propiedades de escenarios compartidos sin pretender ejecutar su instrumentación privada.
 
 ## Integración con las capacidades existentes
@@ -156,6 +156,26 @@ propia: el servidor revierte, pero el cliente no puede acreditar rollback y resp
 acuse tras commit se inyecta después de un commit real; no se afirma haber cortado TCP exactamente durante COMMIT.
 No se reintenta automáticamente una mutación con resultado incierto.
 
+## Corrección de certeza previa a la fusión
+
+El ejecutor distingue explícitamente cinco estados locales: `not-started`, `active`,
+`finished-without-writes`, `commit-uncertain` y `commit-confirmed`.
+La existencia de PDO no demuestra que una escritura haya podido llegar al almacenamiento.
+Antes de entregar la transacción al callback no se considera posible persistencia; después de terminar sin DML
+con rollback acreditado vuelve a existir esa certeza. Los fallos de capacidad/validación en esos puntos conservan
+el diagnóstico original, incluso si una consulta posterior al estado de PDO falla. Se intenta la limpieza de una
+transacción abierta sin convertir su fallo en incertidumbre de una mutación que no pudo ocurrir.
+
+Cuando el callback pudo escribir, un rollback no acreditado o un commit sin certeza conserva `OUTCOME_UNKNOWN`.
+Un commit confirmado seguido de fallo de publicación conserva `RESPONSE_UNAVAILABLE`.
+Los errores técnicos conocidos sin mutación posible se clasifican como `PERSISTENCE_FAILED`.
+
+Se añaden diez regresiones nativas: capacidad/validación antes de BEGIN, fallo de inicio sin transacción,
+acuse de BEGIN perdido antes del callback, rechazo de metadatos con limpieza no acreditable, y cinco errores
+posteriores a una finalización sin DML. Las pruebas verifican contadores BEGIN/rollback/commit, cero DML,
+conservación de las excepciones originales y el estado persistido desde otra conexión. Siguen ejecutándose las
+pruebas anteriores de pérdida real de conexión, rollback y commit incierto; no se modifica el contrato neutral.
+
 ## Matriz de conformidad y pruebas reproducibles
 
 La [matriz JSON](crud-conformance.json) es una observación local de la ejecución, no una modificación de los fixtures.
@@ -171,7 +191,7 @@ Los identificadores opacos ficticios se vinculan a evidencia realmente emitida d
 | Resolución CDS | 80 casos y 11 de intake, más regresiones adicionales, correctos. |
 | LIST/GET original | Pruebas de identidad, autorización, publicación y limpieza correctas. |
 | Codec de escritura | 11 vectores originales correctos; 76 referencias UPDATE intactas. |
-| MariaDB con escrituras | 45 vectores originales correctos y 21 grupos nativos adicionales. |
+| MariaDB con escrituras | 45 vectores originales correctos y 22 grupos nativos adicionales. |
 | Formato | PHPCS PSR-12 correcto, usando el formateador configurado del proyecto. |
 | Aislamiento | Sin puertos publicados; código/contrato en solo lectura, marca de propiedad y limpieza etiquetada. |
 

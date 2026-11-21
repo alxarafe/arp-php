@@ -485,6 +485,158 @@
       "storedRating": "5"
     }
   },
+  "certaintyStatesEvidence": {
+    "before-begin-capability": {
+      "response": {
+        "status": "rejected",
+        "diagnostics": [
+          {
+            "family": "operation-not-allowed",
+            "code": "CAPABILITY_UNAVAILABLE"
+          }
+        ]
+      },
+      "beginCalls": 0,
+      "rollbackCalls": 0,
+      "actionCalls": 0,
+      "dmlCount": 0
+    },
+    "before-begin-validation": {
+      "response": {
+        "status": "rejected",
+        "diagnostics": [
+          {
+            "family": "invalid-data",
+            "code": "INVALID_VALUE"
+          }
+        ]
+      },
+      "beginCalls": 0,
+      "rollbackCalls": 0,
+      "actionCalls": 0,
+      "dmlCount": 0
+    },
+    "begin-failed-before-start": {
+      "response": {
+        "status": "failed",
+        "diagnostics": [
+          {
+            "family": "execution-failure",
+            "code": "PERSISTENCE_FAILED"
+          }
+        ]
+      },
+      "beginCalls": 1,
+      "rollbackCalls": 0,
+      "actionCalls": 0,
+      "dmlCount": 0
+    },
+    "begin-ack-lost-without-action": {
+      "response": {
+        "status": "failed",
+        "diagnostics": [
+          {
+            "family": "execution-failure",
+            "code": "PERSISTENCE_FAILED"
+          }
+        ]
+      },
+      "beginCalls": 1,
+      "rollbackCalls": 1,
+      "actionCalls": 0,
+      "dmlCount": 0
+    },
+    "active-metadata-cleanup-unproven": {
+      "response": {
+        "status": "rejected",
+        "diagnostics": [
+          {
+            "family": "operation-not-allowed",
+            "code": "CAPABILITY_UNAVAILABLE"
+          }
+        ]
+      },
+      "beginCalls": 1,
+      "rollbackCalls": 1,
+      "actionCalls": 0,
+      "dmlCount": 0
+    },
+    "after-noop-capability": {
+      "response": {
+        "status": "rejected",
+        "diagnostics": [
+          {
+            "family": "operation-not-allowed",
+            "code": "CAPABILITY_UNAVAILABLE"
+          }
+        ]
+      },
+      "beginCalls": 1,
+      "rollbackCalls": 1,
+      "actionCalls": 1,
+      "dmlCount": 0
+    },
+    "after-noop-validation": {
+      "response": {
+        "status": "rejected",
+        "diagnostics": [
+          {
+            "family": "invalid-data",
+            "code": "INVALID_VALUE"
+          }
+        ]
+      },
+      "beginCalls": 1,
+      "rollbackCalls": 1,
+      "actionCalls": 1,
+      "dmlCount": 0
+    },
+    "after-noop-access-revoked": {
+      "response": {
+        "status": "rejected",
+        "diagnostics": [
+          {
+            "family": "operation-not-allowed",
+            "code": "UNAVAILABLE"
+          }
+        ]
+      },
+      "beginCalls": 1,
+      "rollbackCalls": 1,
+      "actionCalls": 1,
+      "dmlCount": 0
+    },
+    "after-noop-probe-failed": {
+      "response": {
+        "status": "rejected",
+        "diagnostics": [
+          {
+            "family": "invalid-data",
+            "code": "INVALID_VALUE"
+          }
+        ]
+      },
+      "beginCalls": 1,
+      "rollbackCalls": 1,
+      "actionCalls": 1,
+      "dmlCount": 0
+    },
+    "after-noop-generic-failure": {
+      "response": {
+        "status": "failed",
+        "diagnostics": [
+          {
+            "family": "execution-failure",
+            "code": "PERSISTENCE_FAILED"
+          }
+        ]
+      },
+      "beginCalls": 1,
+      "rollbackCalls": 1,
+      "actionCalls": 1,
+      "dmlCount": 0
+    }
+  },
   "nativeGroups": [
     "vertical-crud",
     "independent-connections",
@@ -506,7 +658,8 @@
     "postcommit-revocation",
     "no-op-zero-dml",
     "partial-set",
-    "parameterized-values"
+    "parameterized-values",
+    "certainty-states"
   ],
   "isolation": {
     "completed": true,

@@ -20,8 +20,8 @@ class MariaDbRecordWriter extends MariaDbRecordReader implements RecordWriter
         \Closure $current
     ): mixed {
         $data = null;
-        $commitStarted = false;
-        $committed = false;
+        $state = 'not-started';
+        $persistencePossible = false;
         try {
             $prepared = $this->prepare($snapshot, $projection, $equalities);
             $physical = $prepared->physical();
@@ -60,6 +60,7 @@ class MariaDbRecordWriter extends MariaDbRecordReader implements RecordWriter
             $this->execute($data, 'SET TRANSACTION ISOLATION LEVEL READ COMMITTED');
             $this->execute($data, 'SET TRANSACTION READ WRITE');
             WriteFailure::need($data->beginTransaction(), 'PERSISTENCE_FAILED');
+            $state = 'active';
             $this->protect($data, $physical);
             WriteFailure::need($this->observe($physical, $data) == $physical, 'GENERATION_EXPIRED');
             $schema = $physical->source->schema;
@@ -109,32 +110,38 @@ class MariaDbRecordWriter extends MariaDbRecordReader implements RecordWriter
                 $prepared->equalities,
                 $this->quote(...)
             );
+            $persistencePossible = true;
             $result = $action($transaction);
             $current();
             if ($transaction->writes === 0) {
                 WriteFailure::need($data->rollBack(), 'PERSISTENCE_FAILED');
+                $state = 'finished-without-writes';
+                $persistencePossible = false;
             } else {
-                $commitStarted = true;
+                $state = 'commit-uncertain';
                 if (!$data->commit()) {
                     throw new \RuntimeException('Commit unacknowledged');
                 }
-                $committed = true;
+                $state = 'commit-confirmed';
             }
             $current();
             return $result;
         } catch (\Throwable $error) {
-            $reverted = $data === null;
-            try {
-                if ($data?->inTransaction()) {
-                    $reverted = $data->rollBack();
-                }
-            } catch (\Throwable) {
-                $reverted = false;
-            }
-            if ($committed) {
+            if ($state === 'commit-confirmed') {
                 throw new WriteFailure('RESPONSE_UNAVAILABLE', 'execution-failure', 'failed');
             }
-            if (!$reverted && $data !== null) {
+            // Connection existence is not evidence that a mutation could have reached storage.
+            $noPersistence = !$persistencePossible
+                || in_array($state, ['not-started','finished-without-writes'], true);
+            $reverted = $noPersistence;
+            try {
+                if ($data?->inTransaction()) {
+                    $reverted = $data->rollBack() || $noPersistence;
+                }
+            } catch (\Throwable) {
+                $reverted = $noPersistence;
+            }
+            if (!$reverted) {
                 throw new WriteFailure('OUTCOME_UNKNOWN', 'execution-failure', 'failed');
             }
             if ($error instanceof WriteFailure) {
@@ -153,7 +160,7 @@ class MariaDbRecordWriter extends MariaDbRecordReader implements RecordWriter
                 throw new WriteFailure('CONSTRAINT_REJECTED', 'invalid-data');
             }
             throw new WriteFailure(
-                $commitStarted ? 'COMMIT_FAILED' : 'PERSISTENCE_FAILED',
+                $state === 'commit-uncertain' ? 'COMMIT_FAILED' : 'PERSISTENCE_FAILED',
                 'execution-failure',
                 'failed'
             );
