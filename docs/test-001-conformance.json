@@ -1,0 +1,2097 @@
+{
+    "feature": "ARP-TEST-001",
+    "contract": "e3c2c08c93add63faebbe011a7e8e1ec3eccff2c",
+    "baseline": "507f3e6",
+    "inventory": "docs\/test-001-inventory.json",
+    "sourceArtifacts": {
+        "fixtures\/crud\/write\/v1\/cases.json": "4e7b1fc49ca63fed77b1df029a4faad8b2ae8ae12ffd795840d9fd83be8bbf81",
+        "fixtures\/cds\/listget\/v1\/cases.json": "0108d12b0d44004bb87d04582c80a75a97ead621c5bcabb025910c5db78b08d6"
+    },
+    "layers": {
+        "generic": {
+            "persistenceEvidence": false,
+            "write": {
+                "create-valid": {
+                    "executed": true,
+                    "passed": true,
+                    "observationsPassed": true
+                },
+                "create-postgresql": {
+                    "executed": true,
+                    "passed": true,
+                    "observationsPassed": true
+                },
+                "create-duplicate-key": {
+                    "executed": true,
+                    "passed": true,
+                    "observationsPassed": true
+                },
+                "create-required-id": {
+                    "executed": true,
+                    "passed": true,
+                    "observationsPassed": true
+                },
+                "create-required-code": {
+                    "executed": true,
+                    "passed": true,
+                    "observationsPassed": true
+                },
+                "create-required-rating": {
+                    "executed": true,
+                    "passed": true,
+                    "observationsPassed": true
+                },
+                "create-null-id": {
+                    "executed": true,
+                    "passed": true,
+                    "observationsPassed": true
+                },
+                "create-null-code": {
+                    "executed": true,
+                    "passed": true,
+                    "observationsPassed": true
+                },
+                "create-null-rating": {
+                    "executed": true,
+                    "passed": true,
+                    "observationsPassed": true
+                },
+                "create-rating-range": {
+                    "executed": true,
+                    "passed": true,
+                    "observationsPassed": true
+                },
+                "create-id-overflow": {
+                    "executed": true,
+                    "passed": true,
+                    "observationsPassed": true
+                },
+                "create-id-json-number": {
+                    "executed": true,
+                    "passed": true,
+                    "observationsPassed": true
+                },
+                "create-rating-boolean": {
+                    "executed": true,
+                    "passed": true,
+                    "observationsPassed": true
+                },
+                "create-code-too-long": {
+                    "executed": true,
+                    "passed": true,
+                    "observationsPassed": true
+                },
+                "create-code-empty": {
+                    "executed": true,
+                    "passed": true,
+                    "observationsPassed": true
+                },
+                "create-unknown-field": {
+                    "executed": true,
+                    "passed": true,
+                    "observationsPassed": true
+                },
+                "create-hidden-field": {
+                    "executed": true,
+                    "passed": true,
+                    "observationsPassed": true
+                },
+                "create-field-not-authorized": {
+                    "executed": true,
+                    "passed": true,
+                    "observationsPassed": true
+                },
+                "create-summary-readonly": {
+                    "executed": true,
+                    "passed": true,
+                    "observationsPassed": true
+                },
+                "create-denied": {
+                    "executed": true,
+                    "passed": true,
+                    "observationsPassed": true
+                },
+                "create-permissions-revoked": {
+                    "executed": true,
+                    "passed": true,
+                    "observationsPassed": true
+                },
+                "create-inactive": {
+                    "executed": true,
+                    "passed": true,
+                    "observationsPassed": true
+                },
+                "create-context-changed": {
+                    "executed": false,
+                    "reason": "Neutral trusted-context\/generation phase is not injectable through the current core callbacks."
+                },
+                "create-rule-rejected": {
+                    "executed": true,
+                    "passed": true,
+                    "observationsPassed": true
+                },
+                "create-unicode-preserved": {
+                    "executed": true,
+                    "passed": true,
+                    "observationsPassed": true
+                },
+                "create-int32-exact-upper-bound": {
+                    "executed": true,
+                    "passed": true,
+                    "observationsPassed": true
+                },
+                "create-missing-inputs": {
+                    "executed": true,
+                    "passed": true,
+                    "observationsPassed": true
+                },
+                "create-null-inputs": {
+                    "executed": true,
+                    "passed": true,
+                    "observationsPassed": true
+                },
+                "create-client-trust-context": {
+                    "executed": true,
+                    "passed": true,
+                    "observationsPassed": true
+                },
+                "create-unknown-target": {
+                    "executed": true,
+                    "passed": true,
+                    "observationsPassed": true
+                },
+                "create-verified-default": {
+                    "executed": false,
+                    "reason": "CrudHost does not implement verified-default descriptors; no feature added by this test task."
+                },
+                "create-unverified-default": {
+                    "executed": false,
+                    "reason": "CrudHost does not implement verified-default descriptors; no feature added by this test task."
+                },
+                "create-null-does-not-use-default": {
+                    "executed": false,
+                    "reason": "CrudHost does not implement verified-default descriptors; no feature added by this test task."
+                },
+                "create-nullable-explicit": {
+                    "executed": true,
+                    "passed": true,
+                    "observationsPassed": true
+                },
+                "create-nullable-absent": {
+                    "executed": true,
+                    "passed": true,
+                    "observationsPassed": true
+                },
+                "create-constraint-rejected": {
+                    "executed": true,
+                    "passed": true,
+                    "observationsPassed": true
+                },
+                "create-new-hidden-column-not-published": {
+                    "executed": true,
+                    "passed": true,
+                    "observationsPassed": true
+                },
+                "delete-valid": {
+                    "executed": true,
+                    "passed": true,
+                    "observationsPassed": true
+                },
+                "delete-postgresql": {
+                    "executed": true,
+                    "passed": true,
+                    "observationsPassed": true
+                },
+                "delete-absent": {
+                    "executed": true,
+                    "passed": true,
+                    "observationsPassed": true
+                },
+                "delete-inaccessible": {
+                    "executed": true,
+                    "passed": true,
+                    "observationsPassed": true
+                },
+                "delete-no-precondition": {
+                    "executed": true,
+                    "passed": true,
+                    "observationsPassed": true
+                },
+                "delete-blind-baseline": {
+                    "executed": true,
+                    "passed": false,
+                    "observationsPassed": true,
+                    "knownGap": "CrudHost closed input shape rejects blind baseline before checking DELETE precondition.",
+                    "actualResponse": {
+                        "status": "rejected",
+                        "diagnostics": [
+                            {
+                                "family": "invalid-data",
+                                "code": "INPUT_SHAPE"
+                            }
+                        ]
+                    },
+                    "expectation": "fixtures\/crud\/write\/v1\/cases.json#\/cases\/42\/expected\/response"
+                },
+                "delete-unknown-evidence": {
+                    "executed": true,
+                    "passed": true,
+                    "observationsPassed": true
+                },
+                "delete-expired-evidence": {
+                    "executed": true,
+                    "passed": true,
+                    "observationsPassed": true
+                },
+                "delete-wrong-context-binding": {
+                    "executed": true,
+                    "passed": true,
+                    "observationsPassed": true
+                },
+                "delete-get-purpose-not-delete": {
+                    "executed": false,
+                    "reason": "GET does not issue a DELETE receipt through the public core API; unknown tokens are not purpose proof."
+                },
+                "delete-missing-state-field": {
+                    "executed": false,
+                    "reason": "The public core issues complete protected evidence; partial synthetic receipt state is not injectable."
+                },
+                "delete-stale-precondition": {
+                    "executed": true,
+                    "passed": true,
+                    "observationsPassed": true
+                },
+                "delete-concurrent-change": {
+                    "executed": true,
+                    "passed": true,
+                    "observationsPassed": true
+                },
+                "delete-hidden-field-covered": {
+                    "executed": true,
+                    "passed": true,
+                    "observationsPassed": true
+                },
+                "delete-hidden-concurrent-change": {
+                    "executed": true,
+                    "passed": true,
+                    "observationsPassed": true
+                },
+                "delete-uncovered-new-column": {
+                    "executed": false,
+                    "reason": "The public core issues complete protected evidence; partial synthetic receipt state is not injectable."
+                },
+                "delete-historical-value": {
+                    "executed": true,
+                    "passed": true,
+                    "observationsPassed": true
+                },
+                "delete-null-is-state": {
+                    "executed": true,
+                    "passed": true,
+                    "observationsPassed": true
+                },
+                "delete-unverified": {
+                    "executed": true,
+                    "passed": true,
+                    "observationsPassed": true
+                },
+                "delete-incompatible": {
+                    "executed": true,
+                    "passed": true,
+                    "observationsPassed": true
+                },
+                "delete-non-atomic": {
+                    "executed": true,
+                    "passed": true,
+                    "observationsPassed": true
+                },
+                "delete-view": {
+                    "executed": true,
+                    "passed": true,
+                    "observationsPassed": true
+                },
+                "delete-uncharacterized-effects": {
+                    "executed": true,
+                    "passed": true,
+                    "observationsPassed": true
+                },
+                "delete-unprotected-rule": {
+                    "executed": true,
+                    "passed": true,
+                    "observationsPassed": true
+                },
+                "delete-permissions-revoked": {
+                    "executed": true,
+                    "passed": true,
+                    "observationsPassed": true
+                },
+                "delete-access-revision-changed": {
+                    "executed": false,
+                    "reason": "Neutral trusted-context\/generation phase is not injectable through the current core callbacks."
+                },
+                "delete-generation-changed": {
+                    "executed": false,
+                    "reason": "Neutral trusted-context\/generation phase is not injectable through the current core callbacks."
+                },
+                "delete-rule-rejected": {
+                    "executed": true,
+                    "passed": true,
+                    "observationsPassed": true
+                },
+                "delete-relation-restricts": {
+                    "executed": true,
+                    "passed": true,
+                    "observationsPassed": true
+                },
+                "delete-opaque-key-valid": {
+                    "executed": false,
+                    "reason": "Mutation keys are public typed components; opaque mutation keys are not implemented."
+                },
+                "delete-hidden-key-rejects-raw": {
+                    "executed": false,
+                    "reason": "Mutation keys are public typed components; opaque mutation keys are not implemented."
+                },
+                "delete-get-key-not-reusable": {
+                    "executed": false,
+                    "reason": "Mutation keys are public typed components; opaque mutation keys are not implemented."
+                },
+                "delete-rounded-key": {
+                    "executed": true,
+                    "passed": true,
+                    "observationsPassed": true
+                },
+                "delete-legacy-type-rejected": {
+                    "executed": true,
+                    "passed": true,
+                    "observationsPassed": true
+                },
+                "create-precommit-rollback": {
+                    "executed": true,
+                    "passed": true,
+                    "observationsPassed": true
+                },
+                "create-commit-rollback": {
+                    "executed": true,
+                    "passed": true,
+                    "observationsPassed": true
+                },
+                "create-uncertain-0": {
+                    "executed": true,
+                    "passed": true,
+                    "observationsPassed": true
+                },
+                "create-uncertain-1": {
+                    "executed": true,
+                    "passed": true,
+                    "observationsPassed": true
+                },
+                "delete-precommit-rollback": {
+                    "executed": true,
+                    "passed": true,
+                    "observationsPassed": true
+                },
+                "delete-commit-rollback": {
+                    "executed": true,
+                    "passed": true,
+                    "observationsPassed": true
+                },
+                "delete-uncertain-0": {
+                    "executed": true,
+                    "passed": true,
+                    "observationsPassed": true
+                },
+                "delete-uncertain-1": {
+                    "executed": true,
+                    "passed": true,
+                    "observationsPassed": true
+                },
+                "update-precommit-rollback": {
+                    "executed": true,
+                    "passed": true,
+                    "observationsPassed": true
+                },
+                "update-commit-rollback": {
+                    "executed": true,
+                    "passed": true,
+                    "observationsPassed": true
+                },
+                "update-uncertain-0": {
+                    "executed": true,
+                    "passed": true,
+                    "observationsPassed": true
+                },
+                "update-uncertain-1": {
+                    "executed": true,
+                    "passed": true,
+                    "observationsPassed": true
+                },
+                "create-rollback-unproven": {
+                    "executed": true,
+                    "passed": true,
+                    "observationsPassed": true
+                },
+                "update-demo-partial": {
+                    "executed": true,
+                    "passed": true,
+                    "observationsPassed": true
+                },
+                "update-demo-independent-change": {
+                    "executed": true,
+                    "passed": true,
+                    "observationsPassed": true
+                },
+                "update-demo-noop": {
+                    "executed": true,
+                    "passed": true,
+                    "observationsPassed": true
+                },
+                "update-demo-historical-omitted": {
+                    "executed": true,
+                    "passed": true,
+                    "observationsPassed": true
+                },
+                "update-demo-historical-resent": {
+                    "executed": true,
+                    "passed": true,
+                    "observationsPassed": true
+                },
+                "update-primary-key-immutable": {
+                    "executed": true,
+                    "passed": true,
+                    "observationsPassed": true
+                },
+                "delegated-specialized-delete": {
+                    "executed": false,
+                    "reason": "Delegated handlers are outside the existing managed CrudHost port."
+                },
+                "delegated-missing-handler": {
+                    "executed": false,
+                    "reason": "Delegated handlers are outside the existing managed CrudHost port."
+                },
+                "delegated-failure-effects-0": {
+                    "executed": false,
+                    "reason": "Delegated handlers are outside the existing managed CrudHost port."
+                },
+                "delegated-failure-effects-1": {
+                    "executed": false,
+                    "reason": "Delegated handlers are outside the existing managed CrudHost port."
+                },
+                "create-field-permission-revoked": {
+                    "executed": true,
+                    "passed": true,
+                    "observationsPassed": true
+                },
+                "create-postcommit-output-revoked": {
+                    "executed": true,
+                    "passed": true,
+                    "observationsPassed": true
+                },
+                "delete-postcommit-output-revoked": {
+                    "executed": true,
+                    "passed": true,
+                    "observationsPassed": true
+                },
+                "update-revoked-field-before-noop": {
+                    "executed": true,
+                    "passed": true,
+                    "observationsPassed": true
+                },
+                "update-conflict-after-interleave": {
+                    "executed": true,
+                    "passed": true,
+                    "observationsPassed": true
+                },
+                "create-negative-zero-canonical": {
+                    "executed": true,
+                    "passed": true,
+                    "observationsPassed": true
+                },
+                "delete-cascades-unavailable": {
+                    "executed": true,
+                    "passed": true,
+                    "observationsPassed": true
+                },
+                "create-required-rule-unavailable": {
+                    "executed": true,
+                    "passed": true,
+                    "observationsPassed": true
+                },
+                "create-physical-length-incompatible": {
+                    "executed": true,
+                    "passed": true,
+                    "observationsPassed": true
+                },
+                "create-physical-range-incompatible": {
+                    "executed": true,
+                    "passed": false,
+                    "observationsPassed": true,
+                    "knownGap": "ReadResolver classifies an unbound observed range narrowed below context as constraint weakening.",
+                    "actualResponse": {
+                        "status": "rejected",
+                        "diagnostics": [
+                            {
+                                "family": "definition-invalid",
+                                "code": "INVALID_DEFINITION"
+                            }
+                        ]
+                    },
+                    "expectation": "fixtures\/crud\/write\/v1\/cases.json#\/cases\/103\/expected\/response"
+                },
+                "create-row-scope-rejected": {
+                    "executed": true,
+                    "passed": true,
+                    "observationsPassed": true
+                },
+                "delegated-row-inaccessible": {
+                    "executed": false,
+                    "reason": "Delegated handlers are outside the existing managed CrudHost port."
+                },
+                "delegated-view-explicit": {
+                    "executed": false,
+                    "reason": "Delegated handlers are outside the existing managed CrudHost port."
+                },
+                "update-confirmation-valid": {
+                    "executed": false,
+                    "reason": "Neutral confirmation placeholders differ from the core consent\/challenge protocol; retained native tests."
+                },
+                "update-confirmation-obsolete": {
+                    "executed": false,
+                    "reason": "Neutral confirmation placeholders differ from the core consent\/challenge protocol; retained native tests."
+                },
+                "update-confirmation-wrong-key-binding": {
+                    "executed": false,
+                    "reason": "Neutral confirmation placeholders differ from the core consent\/challenge protocol; retained native tests."
+                },
+                "create-valid-uint64": {
+                    "executed": true,
+                    "passed": true,
+                    "observationsPassed": true
+                },
+                "update-demo-partial-uint64": {
+                    "executed": true,
+                    "passed": true,
+                    "observationsPassed": true
+                },
+                "delete-valid-uint64": {
+                    "executed": true,
+                    "passed": true,
+                    "observationsPassed": true
+                },
+                "delete-stale-precondition-uint64": {
+                    "executed": true,
+                    "passed": true,
+                    "observationsPassed": true
+                },
+                "create-uint64-overflow": {
+                    "executed": true,
+                    "passed": true,
+                    "observationsPassed": true
+                },
+                "delete-uint64-adjacent-state-conflict": {
+                    "executed": true,
+                    "passed": true,
+                    "observationsPassed": true
+                },
+                "delete-uint64-adjacent-key-binding-rejected": {
+                    "executed": true,
+                    "passed": true,
+                    "observationsPassed": true
+                }
+            },
+            "listGet": {
+                "get-authorized-hidden-key": {
+                    "executed": false,
+                    "reason": "Literal neutral tokens have no issuer port; cryptographic roundtrips retained in separate core tests."
+                },
+                "get-null-preserved": {
+                    "executed": false,
+                    "reason": "Literal neutral tokens have no issuer port; cryptographic roundtrips retained in separate core tests."
+                },
+                "get-historical-rating": {
+                    "executed": false,
+                    "reason": "Literal neutral tokens have no issuer port; cryptographic roundtrips retained in separate core tests."
+                },
+                "get-exact-decimal": {
+                    "executed": false,
+                    "reason": "Literal neutral tokens have no issuer port; cryptographic roundtrips retained in separate core tests."
+                },
+                "get-unicode-and-empty-values": {
+                    "executed": false,
+                    "reason": "Literal neutral tokens have no issuer port; cryptographic roundtrips retained in separate core tests."
+                },
+                "get-unknown-reference": {
+                    "executed": true,
+                    "passed": true,
+                    "observationsPassed": true
+                },
+                "get-existing-but-row-denied": {
+                    "executed": false,
+                    "reason": "Literal neutral tokens have no issuer port; cryptographic roundtrips retained in separate core tests."
+                },
+                "get-scope-binding-denied": {
+                    "executed": false,
+                    "reason": "Literal neutral tokens have no issuer port; cryptographic roundtrips retained in separate core tests."
+                },
+                "get-principal-binding-denied": {
+                    "executed": false,
+                    "reason": "Literal neutral tokens have no issuer port; cryptographic roundtrips retained in separate core tests."
+                },
+                "get-policy-binding-denied": {
+                    "executed": false,
+                    "reason": "Literal neutral tokens have no issuer port; cryptographic roundtrips retained in separate core tests."
+                },
+                "get-projection-binding-denied": {
+                    "executed": false,
+                    "reason": "Literal neutral tokens have no issuer port; cryptographic roundtrips retained in separate core tests."
+                },
+                "get-simple-typed-key": {
+                    "executed": true,
+                    "passed": true,
+                    "observationsPassed": true
+                },
+                "get-composite-typed-key": {
+                    "executed": true,
+                    "passed": true,
+                    "observationsPassed": true
+                },
+                "get-missing-typed-key": {
+                    "executed": true,
+                    "passed": true,
+                    "observationsPassed": true
+                },
+                "get-raw-hidden-key-rejected": {
+                    "executed": true,
+                    "passed": true,
+                    "observationsPassed": true
+                },
+                "key-null": {
+                    "executed": true,
+                    "passed": true,
+                    "observationsPassed": true
+                },
+                "key-incomplete": {
+                    "executed": true,
+                    "passed": true,
+                    "observationsPassed": true
+                },
+                "key-reordered": {
+                    "executed": true,
+                    "passed": true,
+                    "observationsPassed": true
+                },
+                "key-extra": {
+                    "executed": true,
+                    "passed": true,
+                    "observationsPassed": true
+                },
+                "key-number-not-string": {
+                    "executed": true,
+                    "passed": true,
+                    "observationsPassed": true
+                },
+                "key-wrong-type": {
+                    "executed": true,
+                    "passed": true,
+                    "observationsPassed": true
+                },
+                "key-out-of-range": {
+                    "executed": true,
+                    "passed": true,
+                    "observationsPassed": true
+                },
+                "list-first-page": {
+                    "executed": false,
+                    "reason": "Expected literal opaque tokens are not configurable through the core ports; no token substitution."
+                },
+                "list-second-page": {
+                    "executed": false,
+                    "reason": "Literal neutral tokens have no issuer port; cryptographic roundtrips retained in separate core tests."
+                },
+                "list-last-page": {
+                    "executed": false,
+                    "reason": "Literal neutral tokens have no issuer port; cryptographic roundtrips retained in separate core tests."
+                },
+                "list-server-clamps-limit": {
+                    "executed": false,
+                    "reason": "Expected literal opaque tokens are not configurable through the core ports; no token substitution."
+                },
+                "list-empty-authorized-set": {
+                    "executed": true,
+                    "passed": true,
+                    "observationsPassed": true
+                },
+                "list-numeric-order-simple-keys": {
+                    "executed": true,
+                    "passed": true,
+                    "observationsPassed": true
+                },
+                "list-derived-projection": {
+                    "executed": false,
+                    "reason": "Expected literal opaque tokens are not configurable through the core ports; no token substitution."
+                },
+                "list-limit-zero": {
+                    "executed": true,
+                    "passed": true,
+                    "observationsPassed": true
+                },
+                "list-limit-negative": {
+                    "executed": true,
+                    "passed": true,
+                    "observationsPassed": true
+                },
+                "list-limit-bool": {
+                    "executed": true,
+                    "passed": true,
+                    "observationsPassed": true
+                },
+                "list-limit-fraction": {
+                    "executed": true,
+                    "passed": true,
+                    "observationsPassed": true
+                },
+                "list-limit-too-large": {
+                    "executed": true,
+                    "passed": true,
+                    "observationsPassed": true
+                },
+                "list-limit-null": {
+                    "executed": true,
+                    "passed": true,
+                    "observationsPassed": true
+                },
+                "list-arbitrary-filter": {
+                    "executed": true,
+                    "passed": true,
+                    "observationsPassed": true
+                },
+                "list-arbitrary-sort": {
+                    "executed": true,
+                    "passed": true,
+                    "observationsPassed": true
+                },
+                "list-fields-injection": {
+                    "executed": true,
+                    "passed": true,
+                    "observationsPassed": true
+                },
+                "list-offset-rejected": {
+                    "executed": true,
+                    "passed": true,
+                    "observationsPassed": true
+                },
+                "cursor-unknown": {
+                    "executed": true,
+                    "passed": true,
+                    "observationsPassed": true
+                },
+                "cursor-null": {
+                    "executed": true,
+                    "passed": true,
+                    "observationsPassed": true
+                },
+                "cursor-limit-changed": {
+                    "executed": false,
+                    "reason": "Literal neutral tokens have no issuer port; cryptographic roundtrips retained in separate core tests."
+                },
+                "cursor-context-changed": {
+                    "executed": false,
+                    "reason": "Literal neutral tokens have no issuer port; cryptographic roundtrips retained in separate core tests."
+                },
+                "operation-not-authorized": {
+                    "executed": true,
+                    "passed": true,
+                    "observationsPassed": true
+                },
+                "target-not-registered": {
+                    "executed": true,
+                    "passed": true,
+                    "observationsPassed": true
+                },
+                "module-disabled": {
+                    "executed": false,
+                    "reason": "Literal neutral tokens have no issuer port; cryptographic roundtrips retained in separate core tests."
+                },
+                "operation-not-enabled": {
+                    "executed": false,
+                    "reason": "Literal neutral tokens have no issuer port; cryptographic roundtrips retained in separate core tests."
+                },
+                "derived-operation-not-exposed": {
+                    "executed": false,
+                    "reason": "Literal neutral tokens have no issuer port; cryptographic roundtrips retained in separate core tests."
+                },
+                "selected-field-not-readable": {
+                    "executed": true,
+                    "passed": true,
+                    "observationsPassed": true
+                },
+                "client-context-injection": {
+                    "executed": true,
+                    "passed": true,
+                    "observationsPassed": true
+                },
+                "client-context-cannot-authorize": {
+                    "executed": true,
+                    "passed": true,
+                    "observationsPassed": true
+                },
+                "input-null": {
+                    "executed": true,
+                    "passed": true,
+                    "observationsPassed": true
+                },
+                "read-capability-not-proven": {
+                    "executed": true,
+                    "passed": true,
+                    "observationsPassed": true
+                },
+                "table-without-key": {
+                    "executed": true,
+                    "passed": true,
+                    "observationsPassed": true
+                },
+                "invalid-definition": {
+                    "executed": true,
+                    "passed": true,
+                    "observationsPassed": true
+                },
+                "unauthorized-definition-error-concealed": {
+                    "executed": true,
+                    "passed": true,
+                    "observationsPassed": true
+                },
+                "physical-incompatibility": {
+                    "executed": true,
+                    "passed": true,
+                    "observationsPassed": true
+                },
+                "stale-catalog-generation": {
+                    "executed": false,
+                    "reason": "Neutral stale snapshot identity cannot be injected through PhysicalCatalog publication."
+                },
+                "stale-record-reference": {
+                    "executed": false,
+                    "reason": "Literal neutral tokens have no issuer port; cryptographic roundtrips retained in separate core tests."
+                },
+                "stale-continuation": {
+                    "executed": false,
+                    "reason": "Literal neutral tokens have no issuer port; cryptographic roundtrips retained in separate core tests."
+                },
+                "invalidation-during-read": {
+                    "executed": true,
+                    "passed": true,
+                    "observationsPassed": true
+                },
+                "authorization-lost-before-publication": {
+                    "executed": false,
+                    "reason": "Literal neutral tokens have no issuer port; cryptographic roundtrips retained in separate core tests."
+                },
+                "provider-failure": {
+                    "executed": true,
+                    "passed": true,
+                    "observationsPassed": true
+                },
+                "last-row-decode-failure-no-partial-page": {
+                    "executed": true,
+                    "passed": true,
+                    "observationsPassed": true
+                },
+                "unexpected-null-nonnullable": {
+                    "executed": false,
+                    "reason": "Literal neutral tokens have no issuer port; cryptographic roundtrips retained in separate core tests."
+                },
+                "duplicate-record-identity": {
+                    "executed": true,
+                    "passed": true,
+                    "observationsPassed": true
+                },
+                "new-column-not-published-after-rebuild": {
+                    "executed": false,
+                    "reason": "Expected literal opaque tokens are not configurable through the core ports; no token substitution."
+                },
+                "removed-published-column-rebuild-rejected": {
+                    "executed": true,
+                    "passed": true,
+                    "observationsPassed": true
+                },
+                "public-application-without-principal": {
+                    "executed": true,
+                    "passed": true,
+                    "observationsPassed": true
+                },
+                "empty-get-still-checks-publication-generation": {
+                    "executed": true,
+                    "passed": true,
+                    "observationsPassed": true
+                },
+                "context-changed-before-publication": {
+                    "executed": false,
+                    "reason": "Literal neutral tokens have no issuer port; cryptographic roundtrips retained in separate core tests."
+                },
+                "list-limit-one": {
+                    "executed": false,
+                    "reason": "Expected literal opaque tokens are not configurable through the core ports; no token substitution."
+                },
+                "list-after-last-empty": {
+                    "executed": false,
+                    "reason": "Literal neutral tokens have no issuer port; cryptographic roundtrips retained in separate core tests."
+                },
+                "invalid-server-limit-registration": {
+                    "executed": false,
+                    "reason": "The core rejects invalid trusted registration at construction, not as a request response."
+                },
+                "modules-catalog-list": {
+                    "executed": false,
+                    "reason": "Module activation is outside the PHP core host ports; no module resolver added."
+                },
+                "modules-catalog-get-denied-independently": {
+                    "executed": false,
+                    "reason": "Module activation is outside the PHP core host ports; no module resolver added."
+                },
+                "modules-catalog-get-authorized": {
+                    "executed": false,
+                    "reason": "Module activation is outside the PHP core host ports; no module resolver added."
+                },
+                "modules-reports-derived-list": {
+                    "executed": false,
+                    "reason": "Module activation is outside the PHP core host ports; no module resolver added."
+                },
+                "modules-reports-get-unavailable": {
+                    "executed": false,
+                    "reason": "Module activation is outside the PHP core host ports; no module resolver added."
+                },
+                "modules-reports-inactive": {
+                    "executed": false,
+                    "reason": "Module activation is outside the PHP core host ports; no module resolver added."
+                },
+                "modules-all-inactive": {
+                    "executed": false,
+                    "reason": "Module activation is outside the PHP core host ports; no module resolver added."
+                },
+                "modules-reports-without-catalog": {
+                    "executed": false,
+                    "reason": "Module activation is outside the PHP core host ports; no module resolver added."
+                },
+                "modules-undeclared-projection-dependency": {
+                    "executed": false,
+                    "reason": "Module activation is outside the PHP core host ports; no module resolver added."
+                },
+                "modules-deactivation-during-read": {
+                    "executed": false,
+                    "reason": "Module activation is outside the PHP core host ports; no module resolver added."
+                },
+                "modules-row-restriction-still-authoritative": {
+                    "executed": false,
+                    "reason": "Module activation is outside the PHP core host ports; no module resolver added."
+                },
+                "modules-client-cannot-activate": {
+                    "executed": false,
+                    "reason": "Module activation is outside the PHP core host ports; no module resolver added."
+                },
+                "modules-field-access-still-authoritative": {
+                    "executed": false,
+                    "reason": "Module activation is outside the PHP core host ports; no module resolver added."
+                },
+                "modules-permission-revoked-before-publication": {
+                    "executed": false,
+                    "reason": "Module activation is outside the PHP core host ports; no module resolver added."
+                },
+                "get-uint64-max": {
+                    "executed": true,
+                    "passed": true,
+                    "observationsPassed": true
+                },
+                "list-uint64-adjacent-order": {
+                    "executed": true,
+                    "passed": true,
+                    "observationsPassed": true
+                },
+                "get-uint64-overflow": {
+                    "executed": true,
+                    "passed": true,
+                    "observationsPassed": true
+                },
+                "row-integer-numeric-node-rejected": {
+                    "executed": true,
+                    "passed": true,
+                    "observationsPassed": true
+                },
+                "row-integer-negative-zero-normalized": {
+                    "executed": true,
+                    "passed": true,
+                    "observationsPassed": true
+                }
+            }
+        },
+        "sqlAdapter": {
+            "mariadb": {
+                "obligations": [
+                    "get-exact-key",
+                    "read-only",
+                    "parameterized-insert",
+                    "ordered-keyset-and-lookahead",
+                    "scope-before-limit",
+                    "unique-key-integrity",
+                    "rollback-after-callback-failure",
+                    "empty-update-preserves-state",
+                    "partial-update",
+                    "delete-by-exact-key"
+                ],
+                "count": 10,
+                "layer": "sql-adapter",
+                "engine": "mariadb",
+                "persistenceEvidence": true
+            }
+        },
+        "integrated": {
+            "persistenceEvidence": true,
+            "engine": "mariadb",
+            "write": {
+                "create-valid": {
+                    "executed": true,
+                    "passed": true,
+                    "evidence": "providers\/tests\/crud-mariadb.php"
+                },
+                "create-postgresql": {
+                    "executed": false,
+                    "reason": "Another engine observation; first native runtime is PHP\/MariaDB"
+                },
+                "create-duplicate-key": {
+                    "executed": true,
+                    "passed": true,
+                    "evidence": "providers\/tests\/crud-mariadb.php"
+                },
+                "create-required-id": {
+                    "executed": true,
+                    "passed": true,
+                    "evidence": "providers\/tests\/crud-mariadb.php"
+                },
+                "create-required-code": {
+                    "executed": true,
+                    "passed": true,
+                    "evidence": "providers\/tests\/crud-mariadb.php"
+                },
+                "create-required-rating": {
+                    "executed": true,
+                    "passed": true,
+                    "evidence": "providers\/tests\/crud-mariadb.php"
+                },
+                "create-null-id": {
+                    "executed": true,
+                    "passed": true,
+                    "evidence": "providers\/tests\/crud-mariadb.php"
+                },
+                "create-null-code": {
+                    "executed": true,
+                    "passed": true,
+                    "evidence": "providers\/tests\/crud-mariadb.php"
+                },
+                "create-null-rating": {
+                    "executed": true,
+                    "passed": true,
+                    "evidence": "providers\/tests\/crud-mariadb.php"
+                },
+                "create-rating-range": {
+                    "executed": true,
+                    "passed": true,
+                    "evidence": "providers\/tests\/crud-mariadb.php"
+                },
+                "create-id-overflow": {
+                    "executed": true,
+                    "passed": true,
+                    "evidence": "providers\/tests\/crud-mariadb.php"
+                },
+                "create-id-json-number": {
+                    "executed": true,
+                    "passed": true,
+                    "evidence": "providers\/tests\/crud-mariadb.php"
+                },
+                "create-rating-boolean": {
+                    "executed": true,
+                    "passed": true,
+                    "evidence": "providers\/tests\/crud-mariadb.php"
+                },
+                "create-code-too-long": {
+                    "executed": true,
+                    "passed": true,
+                    "evidence": "providers\/tests\/crud-mariadb.php"
+                },
+                "create-code-empty": {
+                    "executed": true,
+                    "passed": true,
+                    "evidence": "providers\/tests\/crud-mariadb.php"
+                },
+                "create-unknown-field": {
+                    "executed": true,
+                    "passed": true,
+                    "evidence": "providers\/tests\/crud-mariadb.php"
+                },
+                "create-hidden-field": {
+                    "executed": true,
+                    "passed": true,
+                    "evidence": "providers\/tests\/crud-mariadb.php"
+                },
+                "create-field-not-authorized": {
+                    "executed": true,
+                    "passed": true,
+                    "evidence": "providers\/tests\/crud-mariadb.php"
+                },
+                "create-summary-readonly": {
+                    "executed": true,
+                    "passed": true,
+                    "evidence": "providers\/tests\/crud-mariadb.php"
+                },
+                "create-denied": {
+                    "executed": true,
+                    "passed": true,
+                    "evidence": "providers\/tests\/crud-mariadb.php"
+                },
+                "create-permissions-revoked": {
+                    "executed": false,
+                    "reason": "Synthetic host\/metadata phase not directly mapped; inspect native groups and limitations"
+                },
+                "create-inactive": {
+                    "executed": true,
+                    "passed": true,
+                    "evidence": "providers\/tests\/crud-mariadb.php"
+                },
+                "create-context-changed": {
+                    "executed": false,
+                    "reason": "Synthetic host\/metadata phase not directly mapped; inspect native groups and limitations"
+                },
+                "create-rule-rejected": {
+                    "executed": true,
+                    "passed": true,
+                    "evidence": "providers\/tests\/crud-mariadb.php"
+                },
+                "create-unicode-preserved": {
+                    "executed": true,
+                    "passed": true,
+                    "evidence": "providers\/tests\/crud-mariadb.php"
+                },
+                "create-int32-exact-upper-bound": {
+                    "executed": true,
+                    "passed": true,
+                    "evidence": "providers\/tests\/crud-mariadb.php"
+                },
+                "create-missing-inputs": {
+                    "executed": true,
+                    "passed": true,
+                    "evidence": "providers\/tests\/crud-mariadb.php"
+                },
+                "create-null-inputs": {
+                    "executed": true,
+                    "passed": true,
+                    "evidence": "providers\/tests\/crud-mariadb.php"
+                },
+                "create-client-trust-context": {
+                    "executed": true,
+                    "passed": true,
+                    "evidence": "providers\/tests\/crud-mariadb.php"
+                },
+                "create-unknown-target": {
+                    "executed": true,
+                    "passed": true,
+                    "evidence": "providers\/tests\/crud-mariadb.php"
+                },
+                "create-verified-default": {
+                    "executed": false,
+                    "reason": "Defaults not characterized by this provider profile"
+                },
+                "create-unverified-default": {
+                    "executed": false,
+                    "reason": "Defaults not characterized by this provider profile"
+                },
+                "create-null-does-not-use-default": {
+                    "executed": false,
+                    "reason": "Defaults not characterized by this provider profile"
+                },
+                "create-nullable-explicit": {
+                    "executed": false,
+                    "reason": "Synthetic host\/metadata phase not directly mapped; inspect native groups and limitations"
+                },
+                "create-nullable-absent": {
+                    "executed": false,
+                    "reason": "Synthetic host\/metadata phase not directly mapped; inspect native groups and limitations"
+                },
+                "create-constraint-rejected": {
+                    "executed": false,
+                    "reason": "Synthetic host\/metadata phase not directly mapped; inspect native groups and limitations"
+                },
+                "create-new-hidden-column-not-published": {
+                    "executed": false,
+                    "reason": "Synthetic host\/metadata phase not directly mapped; inspect native groups and limitations"
+                },
+                "delete-valid": {
+                    "executed": true,
+                    "passed": true,
+                    "evidence": "providers\/tests\/crud-mariadb.php"
+                },
+                "delete-postgresql": {
+                    "executed": false,
+                    "reason": "Another engine observation; first native runtime is PHP\/MariaDB"
+                },
+                "delete-absent": {
+                    "executed": true,
+                    "passed": true,
+                    "evidence": "providers\/tests\/crud-mariadb.php"
+                },
+                "delete-inaccessible": {
+                    "executed": false,
+                    "reason": "Synthetic host\/metadata phase not directly mapped; inspect native groups and limitations"
+                },
+                "delete-no-precondition": {
+                    "executed": true,
+                    "passed": true,
+                    "evidence": "providers\/tests\/crud-mariadb.php"
+                },
+                "delete-blind-baseline": {
+                    "executed": false,
+                    "reason": "Synthetic host\/metadata phase not directly mapped; inspect native groups and limitations"
+                },
+                "delete-unknown-evidence": {
+                    "executed": true,
+                    "passed": true,
+                    "evidence": "providers\/tests\/crud-mariadb.php"
+                },
+                "delete-expired-evidence": {
+                    "executed": true,
+                    "passed": true,
+                    "evidence": "providers\/tests\/crud-mariadb.php"
+                },
+                "delete-wrong-context-binding": {
+                    "executed": false,
+                    "reason": "Synthetic host\/metadata phase not directly mapped; inspect native groups and limitations"
+                },
+                "delete-get-purpose-not-delete": {
+                    "executed": false,
+                    "reason": "Synthetic host\/metadata phase not directly mapped; inspect native groups and limitations"
+                },
+                "delete-missing-state-field": {
+                    "executed": false,
+                    "reason": "Synthetic host\/metadata phase not directly mapped; inspect native groups and limitations"
+                },
+                "delete-stale-precondition": {
+                    "executed": true,
+                    "passed": true,
+                    "evidence": "providers\/tests\/crud-mariadb.php"
+                },
+                "delete-concurrent-change": {
+                    "executed": true,
+                    "passed": true,
+                    "evidence": "providers\/tests\/crud-mariadb.php"
+                },
+                "delete-hidden-field-covered": {
+                    "executed": false,
+                    "reason": "Synthetic host\/metadata phase not directly mapped; inspect native groups and limitations"
+                },
+                "delete-hidden-concurrent-change": {
+                    "executed": false,
+                    "reason": "Synthetic host\/metadata phase not directly mapped; inspect native groups and limitations"
+                },
+                "delete-uncovered-new-column": {
+                    "executed": false,
+                    "reason": "Synthetic host\/metadata phase not directly mapped; inspect native groups and limitations"
+                },
+                "delete-historical-value": {
+                    "executed": true,
+                    "passed": true,
+                    "evidence": "providers\/tests\/crud-mariadb.php"
+                },
+                "delete-null-is-state": {
+                    "executed": false,
+                    "reason": "Synthetic host\/metadata phase not directly mapped; inspect native groups and limitations"
+                },
+                "delete-unverified": {
+                    "executed": false,
+                    "reason": "Synthetic host\/metadata phase not directly mapped; inspect native groups and limitations"
+                },
+                "delete-incompatible": {
+                    "executed": false,
+                    "reason": "Synthetic host\/metadata phase not directly mapped; inspect native groups and limitations"
+                },
+                "delete-non-atomic": {
+                    "executed": false,
+                    "reason": "Synthetic host\/metadata phase not directly mapped; inspect native groups and limitations"
+                },
+                "delete-view": {
+                    "executed": false,
+                    "reason": "Synthetic host\/metadata phase not directly mapped; inspect native groups and limitations"
+                },
+                "delete-uncharacterized-effects": {
+                    "executed": false,
+                    "reason": "Synthetic host\/metadata phase not directly mapped; inspect native groups and limitations"
+                },
+                "delete-unprotected-rule": {
+                    "executed": false,
+                    "reason": "Synthetic host\/metadata phase not directly mapped; inspect native groups and limitations"
+                },
+                "delete-permissions-revoked": {
+                    "executed": false,
+                    "reason": "Synthetic host\/metadata phase not directly mapped; inspect native groups and limitations"
+                },
+                "delete-access-revision-changed": {
+                    "executed": false,
+                    "reason": "Synthetic host\/metadata phase not directly mapped; inspect native groups and limitations"
+                },
+                "delete-generation-changed": {
+                    "executed": false,
+                    "reason": "Synthetic host\/metadata phase not directly mapped; inspect native groups and limitations"
+                },
+                "delete-rule-rejected": {
+                    "executed": false,
+                    "reason": "Synthetic host\/metadata phase not directly mapped; inspect native groups and limitations"
+                },
+                "delete-relation-restricts": {
+                    "executed": false,
+                    "reason": "Synthetic host\/metadata phase not directly mapped; inspect native groups and limitations"
+                },
+                "delete-opaque-key-valid": {
+                    "executed": false,
+                    "reason": "Mutation keys must be public typed PK components in this first runtime"
+                },
+                "delete-hidden-key-rejects-raw": {
+                    "executed": false,
+                    "reason": "Mutation keys must be public typed PK components in this first runtime"
+                },
+                "delete-get-key-not-reusable": {
+                    "executed": false,
+                    "reason": "Mutation keys must be public typed PK components in this first runtime"
+                },
+                "delete-rounded-key": {
+                    "executed": true,
+                    "passed": true,
+                    "evidence": "providers\/tests\/crud-mariadb.php"
+                },
+                "delete-legacy-type-rejected": {
+                    "executed": true,
+                    "passed": true,
+                    "evidence": "providers\/tests\/crud-mariadb.php"
+                },
+                "create-precommit-rollback": {
+                    "executed": false,
+                    "reason": "Private fault instrumentation replaced by independent native fault evidence groups"
+                },
+                "create-commit-rollback": {
+                    "executed": false,
+                    "reason": "Private fault instrumentation replaced by independent native fault evidence groups"
+                },
+                "create-uncertain-0": {
+                    "executed": false,
+                    "reason": "Private fault instrumentation replaced by independent native fault evidence groups"
+                },
+                "create-uncertain-1": {
+                    "executed": false,
+                    "reason": "Private fault instrumentation replaced by independent native fault evidence groups"
+                },
+                "delete-precommit-rollback": {
+                    "executed": false,
+                    "reason": "Private fault instrumentation replaced by independent native fault evidence groups"
+                },
+                "delete-commit-rollback": {
+                    "executed": false,
+                    "reason": "Private fault instrumentation replaced by independent native fault evidence groups"
+                },
+                "delete-uncertain-0": {
+                    "executed": false,
+                    "reason": "Private fault instrumentation replaced by independent native fault evidence groups"
+                },
+                "delete-uncertain-1": {
+                    "executed": false,
+                    "reason": "Private fault instrumentation replaced by independent native fault evidence groups"
+                },
+                "update-precommit-rollback": {
+                    "executed": false,
+                    "reason": "Private fault instrumentation replaced by independent native fault evidence groups"
+                },
+                "update-commit-rollback": {
+                    "executed": false,
+                    "reason": "Private fault instrumentation replaced by independent native fault evidence groups"
+                },
+                "update-uncertain-0": {
+                    "executed": false,
+                    "reason": "Private fault instrumentation replaced by independent native fault evidence groups"
+                },
+                "update-uncertain-1": {
+                    "executed": false,
+                    "reason": "Private fault instrumentation replaced by independent native fault evidence groups"
+                },
+                "create-rollback-unproven": {
+                    "executed": false,
+                    "reason": "Private fault instrumentation replaced by independent native fault evidence groups"
+                },
+                "update-demo-partial": {
+                    "executed": true,
+                    "passed": true,
+                    "evidence": "providers\/tests\/crud-mariadb.php"
+                },
+                "update-demo-independent-change": {
+                    "executed": true,
+                    "passed": true,
+                    "evidence": "providers\/tests\/crud-mariadb.php"
+                },
+                "update-demo-noop": {
+                    "executed": true,
+                    "passed": true,
+                    "evidence": "providers\/tests\/crud-mariadb.php"
+                },
+                "update-demo-historical-omitted": {
+                    "executed": true,
+                    "passed": true,
+                    "evidence": "providers\/tests\/crud-mariadb.php"
+                },
+                "update-demo-historical-resent": {
+                    "executed": true,
+                    "passed": true,
+                    "evidence": "providers\/tests\/crud-mariadb.php"
+                },
+                "update-primary-key-immutable": {
+                    "executed": true,
+                    "passed": true,
+                    "evidence": "providers\/tests\/crud-mariadb.php"
+                },
+                "delegated-specialized-delete": {
+                    "executed": false,
+                    "reason": "Application-owned specialized handler, outside managed host"
+                },
+                "delegated-missing-handler": {
+                    "executed": false,
+                    "reason": "Application-owned specialized handler, outside managed host"
+                },
+                "delegated-failure-effects-0": {
+                    "executed": false,
+                    "reason": "Application-owned specialized handler, outside managed host"
+                },
+                "delegated-failure-effects-1": {
+                    "executed": false,
+                    "reason": "Application-owned specialized handler, outside managed host"
+                },
+                "create-field-permission-revoked": {
+                    "executed": false,
+                    "reason": "Synthetic host\/metadata phase not directly mapped; inspect native groups and limitations"
+                },
+                "create-postcommit-output-revoked": {
+                    "executed": false,
+                    "reason": "Private fault instrumentation replaced by independent native fault evidence groups"
+                },
+                "delete-postcommit-output-revoked": {
+                    "executed": false,
+                    "reason": "Private fault instrumentation replaced by independent native fault evidence groups"
+                },
+                "update-revoked-field-before-noop": {
+                    "executed": false,
+                    "reason": "Synthetic host\/metadata phase not directly mapped; inspect native groups and limitations"
+                },
+                "update-conflict-after-interleave": {
+                    "executed": true,
+                    "passed": true,
+                    "evidence": "providers\/tests\/crud-mariadb.php"
+                },
+                "create-negative-zero-canonical": {
+                    "executed": true,
+                    "passed": true,
+                    "evidence": "providers\/tests\/crud-mariadb.php"
+                },
+                "delete-cascades-unavailable": {
+                    "executed": false,
+                    "reason": "Synthetic host\/metadata phase not directly mapped; inspect native groups and limitations"
+                },
+                "create-required-rule-unavailable": {
+                    "executed": false,
+                    "reason": "Synthetic host\/metadata phase not directly mapped; inspect native groups and limitations"
+                },
+                "create-physical-length-incompatible": {
+                    "executed": false,
+                    "reason": "Synthetic host\/metadata phase not directly mapped; inspect native groups and limitations"
+                },
+                "create-physical-range-incompatible": {
+                    "executed": false,
+                    "reason": "Synthetic host\/metadata phase not directly mapped; inspect native groups and limitations"
+                },
+                "create-row-scope-rejected": {
+                    "executed": false,
+                    "reason": "Synthetic host\/metadata phase not directly mapped; inspect native groups and limitations"
+                },
+                "delegated-row-inaccessible": {
+                    "executed": false,
+                    "reason": "Application-owned specialized handler, outside managed host"
+                },
+                "delegated-view-explicit": {
+                    "executed": false,
+                    "reason": "Application-owned specialized handler, outside managed host"
+                },
+                "update-confirmation-valid": {
+                    "executed": false,
+                    "reason": "Synthetic host\/metadata phase not directly mapped; inspect native groups and limitations"
+                },
+                "update-confirmation-obsolete": {
+                    "executed": false,
+                    "reason": "Synthetic host\/metadata phase not directly mapped; inspect native groups and limitations"
+                },
+                "update-confirmation-wrong-key-binding": {
+                    "executed": false,
+                    "reason": "Synthetic host\/metadata phase not directly mapped; inspect native groups and limitations"
+                },
+                "create-valid-uint64": {
+                    "executed": true,
+                    "passed": true,
+                    "evidence": "providers\/tests\/integer-mariadb.php"
+                },
+                "update-demo-partial-uint64": {
+                    "executed": true,
+                    "passed": true,
+                    "evidence": "providers\/tests\/integer-mariadb.php"
+                },
+                "delete-valid-uint64": {
+                    "executed": true,
+                    "passed": true,
+                    "evidence": "providers\/tests\/integer-mariadb.php"
+                },
+                "delete-stale-precondition-uint64": {
+                    "executed": true,
+                    "passed": true,
+                    "evidence": "providers\/tests\/integer-mariadb.php"
+                },
+                "create-uint64-overflow": {
+                    "executed": true,
+                    "passed": true,
+                    "evidence": "providers\/tests\/integer-mariadb.php"
+                },
+                "delete-uint64-adjacent-state-conflict": {
+                    "executed": true,
+                    "passed": true,
+                    "evidence": "providers\/tests\/integer-mariadb.php"
+                },
+                "delete-uint64-adjacent-key-binding-rejected": {
+                    "executed": true,
+                    "passed": true,
+                    "evidence": "providers\/tests\/integer-mariadb.php"
+                }
+            },
+            "listGet": {
+                "get-authorized-hidden-key": {
+                    "executed": false,
+                    "reason": "No exact native replay; independent native guarantees are listed separately."
+                },
+                "get-null-preserved": {
+                    "executed": false,
+                    "reason": "No exact native replay; independent native guarantees are listed separately."
+                },
+                "get-historical-rating": {
+                    "executed": false,
+                    "reason": "No exact native replay; independent native guarantees are listed separately."
+                },
+                "get-exact-decimal": {
+                    "executed": false,
+                    "reason": "No exact native replay; independent native guarantees are listed separately."
+                },
+                "get-unicode-and-empty-values": {
+                    "executed": false,
+                    "reason": "No exact native replay; independent native guarantees are listed separately."
+                },
+                "get-unknown-reference": {
+                    "executed": true,
+                    "passed": true,
+                    "evidence": "providers\/mariadb\/tests\/listget.php"
+                },
+                "get-existing-but-row-denied": {
+                    "executed": false,
+                    "reason": "No exact native replay; independent native guarantees are listed separately."
+                },
+                "get-scope-binding-denied": {
+                    "executed": false,
+                    "reason": "No exact native replay; independent native guarantees are listed separately."
+                },
+                "get-principal-binding-denied": {
+                    "executed": false,
+                    "reason": "No exact native replay; independent native guarantees are listed separately."
+                },
+                "get-policy-binding-denied": {
+                    "executed": false,
+                    "reason": "No exact native replay; independent native guarantees are listed separately."
+                },
+                "get-projection-binding-denied": {
+                    "executed": false,
+                    "reason": "No exact native replay; independent native guarantees are listed separately."
+                },
+                "get-simple-typed-key": {
+                    "executed": true,
+                    "passed": true,
+                    "evidence": "providers\/mariadb\/tests\/listget.php"
+                },
+                "get-composite-typed-key": {
+                    "executed": true,
+                    "passed": true,
+                    "evidence": "providers\/mariadb\/tests\/listget.php"
+                },
+                "get-missing-typed-key": {
+                    "executed": true,
+                    "passed": true,
+                    "evidence": "providers\/mariadb\/tests\/listget.php"
+                },
+                "get-raw-hidden-key-rejected": {
+                    "executed": true,
+                    "passed": true,
+                    "evidence": "providers\/mariadb\/tests\/listget.php"
+                },
+                "key-null": {
+                    "executed": true,
+                    "passed": true,
+                    "evidence": "providers\/mariadb\/tests\/listget.php"
+                },
+                "key-incomplete": {
+                    "executed": true,
+                    "passed": true,
+                    "evidence": "providers\/mariadb\/tests\/listget.php"
+                },
+                "key-reordered": {
+                    "executed": true,
+                    "passed": true,
+                    "evidence": "providers\/mariadb\/tests\/listget.php"
+                },
+                "key-extra": {
+                    "executed": true,
+                    "passed": true,
+                    "evidence": "providers\/mariadb\/tests\/listget.php"
+                },
+                "key-number-not-string": {
+                    "executed": true,
+                    "passed": true,
+                    "evidence": "providers\/mariadb\/tests\/listget.php"
+                },
+                "key-wrong-type": {
+                    "executed": true,
+                    "passed": true,
+                    "evidence": "providers\/mariadb\/tests\/listget.php"
+                },
+                "key-out-of-range": {
+                    "executed": true,
+                    "passed": true,
+                    "evidence": "providers\/mariadb\/tests\/listget.php"
+                },
+                "list-first-page": {
+                    "executed": false,
+                    "reason": "No exact native replay; independent native guarantees are listed separately."
+                },
+                "list-second-page": {
+                    "executed": false,
+                    "reason": "No exact native replay; independent native guarantees are listed separately."
+                },
+                "list-last-page": {
+                    "executed": false,
+                    "reason": "No exact native replay; independent native guarantees are listed separately."
+                },
+                "list-server-clamps-limit": {
+                    "executed": false,
+                    "reason": "No exact native replay; independent native guarantees are listed separately."
+                },
+                "list-empty-authorized-set": {
+                    "executed": false,
+                    "reason": "No exact native replay; independent native guarantees are listed separately."
+                },
+                "list-numeric-order-simple-keys": {
+                    "executed": false,
+                    "reason": "No exact native replay; independent native guarantees are listed separately."
+                },
+                "list-derived-projection": {
+                    "executed": false,
+                    "reason": "No exact native replay; independent native guarantees are listed separately."
+                },
+                "list-limit-zero": {
+                    "executed": true,
+                    "passed": true,
+                    "evidence": "providers\/mariadb\/tests\/listget.php"
+                },
+                "list-limit-negative": {
+                    "executed": true,
+                    "passed": true,
+                    "evidence": "providers\/mariadb\/tests\/listget.php"
+                },
+                "list-limit-bool": {
+                    "executed": true,
+                    "passed": true,
+                    "evidence": "providers\/mariadb\/tests\/listget.php"
+                },
+                "list-limit-fraction": {
+                    "executed": true,
+                    "passed": true,
+                    "evidence": "providers\/mariadb\/tests\/listget.php"
+                },
+                "list-limit-too-large": {
+                    "executed": true,
+                    "passed": true,
+                    "evidence": "providers\/mariadb\/tests\/listget.php"
+                },
+                "list-limit-null": {
+                    "executed": true,
+                    "passed": true,
+                    "evidence": "providers\/mariadb\/tests\/listget.php"
+                },
+                "list-arbitrary-filter": {
+                    "executed": true,
+                    "passed": true,
+                    "evidence": "providers\/mariadb\/tests\/listget.php"
+                },
+                "list-arbitrary-sort": {
+                    "executed": true,
+                    "passed": true,
+                    "evidence": "providers\/mariadb\/tests\/listget.php"
+                },
+                "list-fields-injection": {
+                    "executed": true,
+                    "passed": true,
+                    "evidence": "providers\/mariadb\/tests\/listget.php"
+                },
+                "list-offset-rejected": {
+                    "executed": true,
+                    "passed": true,
+                    "evidence": "providers\/mariadb\/tests\/listget.php"
+                },
+                "cursor-unknown": {
+                    "executed": true,
+                    "passed": true,
+                    "evidence": "providers\/mariadb\/tests\/listget.php"
+                },
+                "cursor-null": {
+                    "executed": true,
+                    "passed": true,
+                    "evidence": "providers\/mariadb\/tests\/listget.php"
+                },
+                "cursor-limit-changed": {
+                    "executed": false,
+                    "reason": "No exact native replay; independent native guarantees are listed separately."
+                },
+                "cursor-context-changed": {
+                    "executed": false,
+                    "reason": "No exact native replay; independent native guarantees are listed separately."
+                },
+                "operation-not-authorized": {
+                    "executed": false,
+                    "reason": "No exact native replay; independent native guarantees are listed separately."
+                },
+                "target-not-registered": {
+                    "executed": false,
+                    "reason": "No exact native replay; independent native guarantees are listed separately."
+                },
+                "module-disabled": {
+                    "executed": false,
+                    "reason": "No exact native replay; independent native guarantees are listed separately."
+                },
+                "operation-not-enabled": {
+                    "executed": false,
+                    "reason": "No exact native replay; independent native guarantees are listed separately."
+                },
+                "derived-operation-not-exposed": {
+                    "executed": false,
+                    "reason": "No exact native replay; independent native guarantees are listed separately."
+                },
+                "selected-field-not-readable": {
+                    "executed": false,
+                    "reason": "No exact native replay; independent native guarantees are listed separately."
+                },
+                "client-context-injection": {
+                    "executed": true,
+                    "passed": true,
+                    "evidence": "providers\/mariadb\/tests\/listget.php"
+                },
+                "client-context-cannot-authorize": {
+                    "executed": false,
+                    "reason": "No exact native replay; independent native guarantees are listed separately."
+                },
+                "input-null": {
+                    "executed": true,
+                    "passed": true,
+                    "evidence": "providers\/mariadb\/tests\/listget.php"
+                },
+                "read-capability-not-proven": {
+                    "executed": false,
+                    "reason": "No exact native replay; independent native guarantees are listed separately."
+                },
+                "table-without-key": {
+                    "executed": false,
+                    "reason": "No exact native replay; independent native guarantees are listed separately."
+                },
+                "invalid-definition": {
+                    "executed": false,
+                    "reason": "No exact native replay; independent native guarantees are listed separately."
+                },
+                "unauthorized-definition-error-concealed": {
+                    "executed": false,
+                    "reason": "No exact native replay; independent native guarantees are listed separately."
+                },
+                "physical-incompatibility": {
+                    "executed": false,
+                    "reason": "No exact native replay; independent native guarantees are listed separately."
+                },
+                "stale-catalog-generation": {
+                    "executed": false,
+                    "reason": "No exact native replay; independent native guarantees are listed separately."
+                },
+                "stale-record-reference": {
+                    "executed": false,
+                    "reason": "No exact native replay; independent native guarantees are listed separately."
+                },
+                "stale-continuation": {
+                    "executed": false,
+                    "reason": "No exact native replay; independent native guarantees are listed separately."
+                },
+                "invalidation-during-read": {
+                    "executed": false,
+                    "reason": "No exact native replay; independent native guarantees are listed separately."
+                },
+                "authorization-lost-before-publication": {
+                    "executed": false,
+                    "reason": "No exact native replay; independent native guarantees are listed separately."
+                },
+                "provider-failure": {
+                    "executed": false,
+                    "reason": "No exact native replay; independent native guarantees are listed separately."
+                },
+                "last-row-decode-failure-no-partial-page": {
+                    "executed": false,
+                    "reason": "No exact native replay; independent native guarantees are listed separately."
+                },
+                "unexpected-null-nonnullable": {
+                    "executed": false,
+                    "reason": "No exact native replay; independent native guarantees are listed separately."
+                },
+                "duplicate-record-identity": {
+                    "executed": false,
+                    "reason": "No exact native replay; independent native guarantees are listed separately."
+                },
+                "new-column-not-published-after-rebuild": {
+                    "executed": false,
+                    "reason": "No exact native replay; independent native guarantees are listed separately."
+                },
+                "removed-published-column-rebuild-rejected": {
+                    "executed": false,
+                    "reason": "No exact native replay; independent native guarantees are listed separately."
+                },
+                "public-application-without-principal": {
+                    "executed": false,
+                    "reason": "No exact native replay; independent native guarantees are listed separately."
+                },
+                "empty-get-still-checks-publication-generation": {
+                    "executed": false,
+                    "reason": "No exact native replay; independent native guarantees are listed separately."
+                },
+                "context-changed-before-publication": {
+                    "executed": false,
+                    "reason": "No exact native replay; independent native guarantees are listed separately."
+                },
+                "list-limit-one": {
+                    "executed": false,
+                    "reason": "No exact native replay; independent native guarantees are listed separately."
+                },
+                "list-after-last-empty": {
+                    "executed": false,
+                    "reason": "No exact native replay; independent native guarantees are listed separately."
+                },
+                "invalid-server-limit-registration": {
+                    "executed": false,
+                    "reason": "No exact native replay; independent native guarantees are listed separately."
+                },
+                "modules-catalog-list": {
+                    "executed": false,
+                    "reason": "No exact native replay; independent native guarantees are listed separately."
+                },
+                "modules-catalog-get-denied-independently": {
+                    "executed": false,
+                    "reason": "No exact native replay; independent native guarantees are listed separately."
+                },
+                "modules-catalog-get-authorized": {
+                    "executed": false,
+                    "reason": "No exact native replay; independent native guarantees are listed separately."
+                },
+                "modules-reports-derived-list": {
+                    "executed": false,
+                    "reason": "No exact native replay; independent native guarantees are listed separately."
+                },
+                "modules-reports-get-unavailable": {
+                    "executed": false,
+                    "reason": "No exact native replay; independent native guarantees are listed separately."
+                },
+                "modules-reports-inactive": {
+                    "executed": false,
+                    "reason": "No exact native replay; independent native guarantees are listed separately."
+                },
+                "modules-all-inactive": {
+                    "executed": false,
+                    "reason": "No exact native replay; independent native guarantees are listed separately."
+                },
+                "modules-reports-without-catalog": {
+                    "executed": false,
+                    "reason": "No exact native replay; independent native guarantees are listed separately."
+                },
+                "modules-undeclared-projection-dependency": {
+                    "executed": false,
+                    "reason": "No exact native replay; independent native guarantees are listed separately."
+                },
+                "modules-deactivation-during-read": {
+                    "executed": false,
+                    "reason": "No exact native replay; independent native guarantees are listed separately."
+                },
+                "modules-row-restriction-still-authoritative": {
+                    "executed": false,
+                    "reason": "No exact native replay; independent native guarantees are listed separately."
+                },
+                "modules-client-cannot-activate": {
+                    "executed": false,
+                    "reason": "No exact native replay; independent native guarantees are listed separately."
+                },
+                "modules-field-access-still-authoritative": {
+                    "executed": false,
+                    "reason": "No exact native replay; independent native guarantees are listed separately."
+                },
+                "modules-permission-revoked-before-publication": {
+                    "executed": false,
+                    "reason": "No exact native replay; independent native guarantees are listed separately."
+                },
+                "get-uint64-max": {
+                    "executed": true,
+                    "passed": true,
+                    "evidence": "providers\/tests\/integer-mariadb.php"
+                },
+                "list-uint64-adjacent-order": {
+                    "executed": true,
+                    "passed": true,
+                    "evidence": "providers\/tests\/integer-mariadb.php"
+                },
+                "get-uint64-overflow": {
+                    "executed": true,
+                    "passed": true,
+                    "evidence": "providers\/tests\/integer-mariadb.php"
+                },
+                "row-integer-numeric-node-rejected": {
+                    "executed": false,
+                    "reason": "No exact native replay; independent native guarantees are listed separately."
+                },
+                "row-integer-negative-zero-normalized": {
+                    "executed": false,
+                    "reason": "No exact native replay; independent native guarantees are listed separately."
+                }
+            }
+        }
+    },
+    "nativeRegressionEvidence": {
+        "groups": [
+            "vertical-crud",
+            "independent-connections",
+            "row-lock",
+            "field-concurrency",
+            "confirmation",
+            "authorization",
+            "business-validation",
+            "check-restriction",
+            "foreign-key",
+            "cascade-rejection",
+            "trigger-rejection",
+            "hidden-column-concurrency",
+            "protected-read-evidence",
+            "rollback",
+            "unknown-commit",
+            "unknown-rollback",
+            "connection-loss",
+            "postcommit-revocation",
+            "no-op-zero-dml",
+            "partial-set",
+            "parameterized-values",
+            "certainty-states"
+        ],
+        "certaintyRegressions": 10,
+        "integerAssertions": 178,
+        "integerDomains": [
+            {
+                "bits": 8,
+                "signed": true,
+                "minimum": "-128",
+                "maximum": "127"
+            },
+            {
+                "bits": 8,
+                "signed": false,
+                "minimum": "0",
+                "maximum": "255"
+            },
+            {
+                "bits": 16,
+                "signed": true,
+                "minimum": "-32768",
+                "maximum": "32767"
+            },
+            {
+                "bits": 16,
+                "signed": false,
+                "minimum": "0",
+                "maximum": "65535"
+            },
+            {
+                "bits": 32,
+                "signed": true,
+                "minimum": "-2147483648",
+                "maximum": "2147483647"
+            },
+            {
+                "bits": 32,
+                "signed": false,
+                "minimum": "0",
+                "maximum": "4294967295"
+            },
+            {
+                "bits": 64,
+                "signed": true,
+                "minimum": "-9223372036854775808",
+                "maximum": "9223372036854775807"
+            },
+            {
+                "bits": 64,
+                "signed": false,
+                "minimum": "0",
+                "maximum": "18446744073709551615"
+            }
+        ],
+        "readLayouts": [
+            "composite",
+            "simple"
+        ]
+    },
+    "summary": {
+        "generic": {
+            "write": {
+                "inventoried": 117,
+                "executed": 96,
+                "passed": 94,
+                "knownGaps": 2,
+                "notExecuted": 21
+            },
+            "listGet": {
+                "inventoried": 93,
+                "executed": 49,
+                "passed": 49,
+                "knownGaps": 0,
+                "notExecuted": 44
+            }
+        },
+        "integrated": {
+            "write": {
+                "inventoried": 117,
+                "executed": 52,
+                "passed": 52,
+                "knownGaps": 0,
+                "notExecuted": 65
+            },
+            "listGet": {
+                "inventoried": 93,
+                "executed": 29,
+                "passed": 29,
+                "knownGaps": 0,
+                "notExecuted": 64
+            }
+        }
+    },
+    "limitations": [
+        "Generic port events, rollback and injected faults are simulations, never SQL persistence evidence.",
+        "Two executed core gaps remain nonconformant. Strict test:core exits 1; test:core:baseline explicitly permits only those established signatures.",
+        "Opaque literal tokens, partial protected receipt state, delegation, defaults and module phases not supported by existing ports are not counted as replay passes.",
+        "The common adapter battery ran on MariaDB only. Other existing adapters may reuse it but have no new execution claim."
+    ]
+}

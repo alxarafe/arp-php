@@ -165,3 +165,11 @@ and read-bound DELETE evidence. The [current matrix](docs/integer-conformance.js
 [earlier matrix](docs/crud-conformance.json) remains historical evidence.
 INTEGER supports signed/unsigned 8/16/32/64-bit capacities without aliases; complete CRUD conformance is not claimed.
 Run `providers/crud-docker.py` against the clean revision in `write-contract.ref` for reproducible isolated tests.
+
+## Separación de pruebas CRUD y SQL
+
+[ARP-TEST-001](docs/test-001.md) separa el replay genérico del núcleo, las obligaciones de puertos SQL y la
+integración real. La [matriz por nivel](docs/test-001-conformance.json) conserva los 52/29 pases integrados
+MariaDB y registra 94/49 pases genéricos, dos brechas conocidas y las omisiones, sin contar simulaciones como SQL.
+`composer test:core` es estricto y falla por las dos brechas documentadas; `composer test:core:baseline`,
+utilizado explícitamente por la suite y CI, comprueba la línea base sin marcarlas conformes.

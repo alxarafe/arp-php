@@ -1,0 +1,147 @@
+{
+  "feature": "ARP-TEST-001",
+  "baseline": "507f3e6",
+  "contract": "e3c2c08c93add63faebbe011a7e8e1ec3eccff2c",
+  "levels": {
+    "generic-core": "Production hosts, scalar codecs and metadata resolution without any SQL connection.",
+    "sql-adapter": "Direct RecordReader/RecordWriter obligations and engine mechanisms with actual persistence.",
+    "integrated": "Production hosts + production SQL provider + actual engine and independently observed rows."
+  },
+  "before": {
+    "genericNeutralReplay": {
+      "write": 0,
+      "listGet": 0
+    },
+    "integratedMariaDb": {
+      "write": 52,
+      "writeTotal": 117,
+      "listGet": 29,
+      "listGetTotal": 93
+    },
+    "commonPortBattery": 0,
+    "nativeGroups": 22,
+    "certaintyRegressions": 10,
+    "integerNativeAssertions": 178
+  },
+  "files": [
+    {
+      "path": "tests/crud.php",
+      "level": "generic-core",
+      "scope": "14 codecs; 76 UPDATE references checked by hash, not executed."
+    },
+    {
+      "path": "tests/listget.php",
+      "level": "generic-core",
+      "scope": "Memory port and fake PDO failure cleanup; no SQL evidence."
+    },
+    {
+      "path": "tests/cds-read.php",
+      "level": "generic-core",
+      "scope": "80 resolution/11 intake cases; immutable snapshots and generations."
+    },
+    {
+      "path": "tests/integer.php",
+      "level": "generic-core",
+      "scope": "2981 exact arithmetic and identity assertions."
+    },
+    {
+      "path": "providers/tests/crud-mariadb.php",
+      "sections": [
+        {
+          "level": "integrated",
+          "scope": "Vertical CRUD smoke and 45 original response/persisted-state vector replays."
+        },
+        {
+          "level": "sql-adapter",
+          "scope": "Actual locks, SQL integrity, callback rollback, DML trace, connection loss and commit/rollback fault probes."
+        },
+        {
+          "level": "integrated",
+          "scope": "Authorization, confirmation, hidden-field concurrency, output revocation and uncertain outcomes."
+        }
+      ]
+    },
+    {
+      "path": "providers/tests/integer-mariadb.php",
+      "sections": [
+        {
+          "level": "sql-adapter",
+          "scope": "Eight observed domains, typed roundtrip, exact binding and overflow without DML."
+        },
+        {
+          "level": "integrated",
+          "scope": "Seven uint64 write and three LIST/GET original vectors; 178 assertions including cursors and baselines."
+        }
+      ]
+    },
+    {
+      "path": "providers/mariadb/tests/listget.php",
+      "sections": [
+        {
+          "level": "integrated",
+          "scope": "26 direct vectors, simple/composite keys, policies, opaque keys/cursors and projections."
+        },
+        {
+          "level": "sql-adapter",
+          "scope": "Real decoding, close/commit/rollback errors, SQL keyset, concurrent DDL DATA/GUARD protection."
+        }
+      ]
+    },
+    {
+      "path": "providers/tests/sql-listget.php",
+      "level": "integrated",
+      "scope": "Existing multi-engine runner; duplicate 26-vector loop extracted into NeutralReadCases. Only MariaDB reexecuted in this task via existing MariaDB runner."
+    },
+    {
+      "path": "providers/mariadb/tests/integration.php",
+      "level": "sql-adapter",
+      "scope": "Real observation, bounds, metadata restrictions, indexes/keys, permissions and narrowing."
+    },
+    {
+      "path": "providers/mariadb/tests/persistence.php",
+      "level": "integrated",
+      "scope": "Real observations combined with physical cache persistence and recovery after process/container restart."
+    },
+    {
+      "path": "tests/core-contract.php",
+      "level": "generic-core",
+      "scope": "New exhaustive 117/93 inventory and applicable original vector replay via deterministic public ports."
+    },
+    {
+      "path": "tests/Support/AdapterObligations.php",
+      "level": "sql-adapter",
+      "scope": "Ten shared executable port obligations. Simulated self-check never counts as adapter SQL evidence."
+    }
+  ],
+  "mandatoryEngineSpecificObligations": [
+    {
+      "id": "transaction-isolation-and-row-locks",
+      "required": "Independent sessions, actual interleaving and blocking; simulation is insufficient."
+    },
+    {
+      "id": "native-integrity-and-side-effects",
+      "required": "Actual unique/FK/CHECK behavior, trigger/cascade characterization and known capability rejection."
+    },
+    {
+      "id": "ddl-observation-and-publication",
+      "required": "Actual observation/permissions, physical narrowing, metadata locks and generation changes."
+    },
+    {
+      "id": "failure-and-transaction-certainty",
+      "required": "Actual rollback and persisted state, connection loss and acknowledged/unacknowledged commit boundaries."
+    }
+  ],
+  "deduplication": {
+    "sharedReplay": "tests/Support/NeutralReadCases.php",
+    "consumers": [
+      "providers/mariadb/tests/listget.php",
+      "providers/tests/sql-listget.php"
+    ],
+    "originalDirectIds": 26,
+    "removedGuarantees": []
+  },
+  "productionChanges": [],
+  "neutralContractChanges": [],
+  "newEngines": [],
+  "newDependencies": []
+}
