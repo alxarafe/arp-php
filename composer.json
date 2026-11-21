@@ -32,7 +32,8 @@
       "@test:conformance",
       "@test:runtime",
       "@test:cds-read",
-      "@test:listget"
+      "@test:listget",
+      "@test:crud"
     ],
     "test:conformance": "@php tests/conformance.php",
     "test:runtime": "@php tests/runtime.php",
@@ -40,6 +41,7 @@
     "test:cds-read": "@php tests/cds-read.php",
     "test:listget": "@php tests/listget.php",
     "lint": "@php vendor/bin/phpcs",
-    "fix": "@php vendor/bin/phpcbf"
+    "fix": "@php vendor/bin/phpcbf",
+    "test:crud": "@php tests/crud.php"
   }
 }
