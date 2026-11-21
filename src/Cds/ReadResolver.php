@@ -272,6 +272,45 @@ final class ReadResolver
                 $at . '/constraints'
             );
         }
+        if ($this->writeOperations && $type === 'INTEGER' && !isset($overlay->dictionary) && (array)$context) {
+            // An observed domain is storage evidence, not an authored dictionary restriction.
+            // Check write representability before interpreting the overlay as a narrowing of the physical base.
+            $bounds = [];
+            foreach ($context as $key => $value) {
+                $bounds[$key] = self::bound($value, $at . '/constraints/' . $key);
+            }
+            self::need(
+                !isset($bounds['minimum'], $bounds['maximum'])
+                || Number::compare($bounds['minimum'], $bounds['maximum']) <= 0,
+                'CONSTRAINT_CONTRADICTION',
+                $at . '/constraints'
+            );
+            foreach ($bounds as $value) {
+                self::need(
+                    Number::compare('-9223372036854775808', $value) <= 0
+                    && Number::compare($value, '18446744073709551615') <= 0,
+                    'CONSTRAINT_CONTRADICTION',
+                    $at . '/constraints'
+                );
+            }
+            if (isset($bounds['minimum'], $bounds['maximum'])) {
+                try {
+                    // Reject an impossible authored INTEGER domain before classifying storage capacity.
+                    Integer::derive($bounds);
+                } catch (Failure) {
+                    self::need(false, 'CONSTRAINT_CONTRADICTION', $at . '/constraints');
+                }
+            }
+            foreach ($bounds as $value) {
+                self::need(
+                    Number::compare($col->integerRange->minimum, $value) <= 0
+                    && Number::compare($value, $col->integerRange->maximum) <= 0,
+                    'DOMAIN_NOT_REPRESENTABLE',
+                    $at,
+                    'physical-incompatible'
+                );
+            }
+        }
         if ($type === 'INTEGER') {
             try {
                 $d = Integer::derive($intrinsic);

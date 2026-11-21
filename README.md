@@ -168,8 +168,8 @@ Run `providers/crud-docker.py` against the clean revision in `write-contract.ref
 
 ## Separación de pruebas CRUD y SQL
 
-[ARP-TEST-001](docs/test-001.md) separa el replay genérico del núcleo, las obligaciones de puertos SQL y la
-integración real. La [matriz por nivel](docs/test-001-conformance.json) conserva los 52/29 pases integrados
-MariaDB y registra 94/49 pases genéricos, dos brechas conocidas y las omisiones, sin contar simulaciones como SQL.
-`composer test:core` es estricto y falla por las dos brechas documentadas; `composer test:core:baseline`,
-utilizado explícitamente por la suite y CI, comprueba la línea base sin marcarlas conformes.
+[ARP-TEST-002](docs/test-002.md) cierra las dos discrepancias del núcleo sin modificar el contrato neutral.
+La [matriz actualizada](docs/test-002-conformance.json) registra 96 pases CRUD y 49 LIST/GET genéricos,
+sin excepciones ni opciones de tolerancia. `composer test:core` es estricto y obligatorio en CI.
+El [inventario ARP-TEST-001](docs/test-001-inventory.json) conserva la separación entre núcleo, adaptador e
+integración; sus matrices y brechas anteriores permanecen como evidencia histórica.

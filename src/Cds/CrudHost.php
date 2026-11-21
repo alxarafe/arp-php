@@ -238,10 +238,18 @@ final class CrudHost
         };
         $key = [];
         $publicKey = null;
+        $deleteInputs = ['key','precondition'];
+        if (
+            $op === 'DELETE' && $purpose === 'invoke' && $request->inputs instanceof \stdClass
+            && !isset($request->inputs->precondition)
+        ) {
+            // An arbitrary baseline is never DELETE evidence, even when its values happen to match.
+            $deleteInputs[] = 'baseline';
+        }
         $inputs = self::shape(
             $request->inputs,
             $op === 'CREATE' ? ['values']
-            : ($op === 'UPDATE' ? ['key','changes','baseline','confirmation'] : ['key','precondition']),
+            : ($op === 'UPDATE' ? ['key','changes','baseline','confirmation'] : $deleteInputs),
             $op === 'CREATE' ? ['values'] : ['key']
         );
         if ($op !== 'CREATE') {

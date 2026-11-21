@@ -186,7 +186,7 @@ $supported = [
     'create-summary-readonly',
     'create-rule-rejected','create-unicode-preserved','create-int32-exact-upper-bound','create-missing-inputs',
     'create-null-inputs','create-client-trust-context','create-unknown-target','create-negative-zero-canonical',
-    'delete-valid','delete-absent','delete-no-precondition','delete-unknown-evidence',
+    'delete-valid','delete-absent','delete-no-precondition','delete-blind-baseline','delete-unknown-evidence',
     'delete-expired-evidence','delete-stale-precondition','delete-concurrent-change','delete-historical-value',
     'delete-rounded-key','delete-legacy-type-rejected','update-demo-partial','update-demo-independent-change',
     'update-demo-noop','update-demo-historical-omitted','update-demo-historical-resent','update-primary-key-immutable',
@@ -697,10 +697,99 @@ foreach (
 check($rows() === $beforeStateTests, 'certainty regressions leave actual persistence unchanged');
 echo 'PASS ' . count($certaintyEvidence)
     . " explicit transaction certainty regressions; original diagnoses preserved\n";
+// Real regression for the two closed core classifications, with an independently observed database.
+$allowed = true;
+$writeFields = ['id','code','rating'];
+$scope = new stdClass();
+$readScope = null;
+$ruleReject = false;
+$hook = null;
+$seed($vectors['defaults']['rows']);
+$tracedConnect = static function () use ($connect): PDO {
+    $connection = $connect();
+    $connection->setAttribute(PDO::ATTR_STATEMENT_CLASS, [WriteTrace::class]);
+    return $connection;
+};
+$tracedHost = new CrudHost(
+    $catalog,
+    new MariaDbRecordReader($tracedConnect, 2),
+    new MariaDbRecordWriter($tracedConnect, 2),
+    $targets,
+    $authorizer
+);
+$classificationKey = (object)['components' => [(object)['field' => 'id','type' => 'INTEGER','value' => '7']]];
+$proof = $tracedHost->readForDelete('demo.items', $classificationKey, $context)['output']['precondition'];
+$classificationEvidence = [];
+foreach (
+    [
+    'missing-evidence' => [(object)['key' => $classificationKey,'baseline' => (object)['rating' => '5']],
+        'PRECONDITION_REQUIRED'],
+    'malformed-member' => [(object)['key' => $classificationKey,'baseline' => new stdClass(),'extra' => true],
+        'INPUT_SHAPE'],
+    'baseline-with-evidence' => [(object)['key' => $classificationKey,'baseline' => new stdClass(),
+        'precondition' => $proof], 'INPUT_SHAPE']
+    ] as $name => [$inputs,$code]
+) {
+    WriteTrace::$sql = [];
+    $before = $rows();
+    $response = $tracedHost->invoke(encode((object)[
+        'target' => 'demo.items','operation' => 'DELETE','inputs' => $inputs
+    ]), $context);
+    check($response === ['status' => 'rejected','diagnostics' => [
+        ['family' => 'invalid-data','code' => $code]
+    ]], $name . ' exact classification');
+    check(WriteTrace::$sql === [] && $rows() === $before, $name . ' zero DML and unchanged database');
+    $classificationEvidence[$name] = ['response' => $response,'dmlCount' => 0,'persistedUnchanged' => true];
+}
+$admin->exec('CREATE TABLE core_range_items(id INT PRIMARY KEY,code VARCHAR(12) NOT NULL,'
+    . 'rating TINYINT UNSIGNED NOT NULL) ENGINE=InnoDB');
+$admin->exec("INSERT INTO core_range_items VALUES (7,'A-007',5)");
+$rangeDefinitions = Parser::parse(encode($definitions), 'json');
+$rangeDefinitions->logical->items->fields->rating->constraints->maximum = '1000';
+$rangeProvider = new MariaDbObservationProvider(
+    $tracedConnect,
+    'primary',
+    'demo.items',
+    'arpcds',
+    'core_range_items',
+    2
+);
+$observedRating = array_values(array_filter(
+    $rangeProvider->observe()->columns,
+    static fn($column) => $column->name === 'rating'
+))[0];
+check(
+    $observedRating->scalarType === 'INTEGER'
+    && (array)$observedRating->integerRange === ['minimum' => '0','maximum' => '255'],
+    'independently observed real unsigned 8-bit domain'
+);
+$rangeCatalog = new PhysicalCatalog($dictionary, $rangeDefinitions, ['items' => $rangeProvider], true);
+$rangeHost = new CrudHost(
+    $rangeCatalog,
+    new MariaDbRecordReader($tracedConnect, 2),
+    new MariaDbRecordWriter($tracedConnect, 2),
+    $targets,
+    $authorizer
+);
+$rangeRows = static fn() => $admin->query('SELECT CAST(id AS CHAR) id,code,CAST(rating AS CHAR) rating'
+    . ' FROM core_range_items ORDER BY core_range_items.id')->fetchAll(PDO::FETCH_ASSOC);
+$before = $rangeRows();
+WriteTrace::$sql = [];
+$response = $rangeHost->invoke(encode((object)['target' => 'demo.items','operation' => 'CREATE',
+    'inputs' => (object)['values' => (object)['id' => '8','code' => 'A-008','rating' => '3']]]), $context);
+check($response === ['status' => 'rejected','diagnostics' => [
+    ['family' => 'physical-incompatible','code' => 'INCOMPATIBLE_STORAGE']
+]], 'actual unsigned 8-bit storage cannot represent declared 0..1000');
+check(WriteTrace::$sql === [] && $rangeRows() === $before, 'intersection value never enables unsafe domain write');
+$classificationEvidence['physical-domain-insufficient'] = ['response' => $response,'dmlCount' => 0,
+    'persistedUnchanged' => true,'observedDomain' => (array)$observedRating->integerRange,
+    'logicalDomain' => ['minimum' => '0','maximum' => '1000'],'candidate' => '3'];
+echo 'PASS ' . count($classificationEvidence) . " native core classification regressions, zero DML\n";
 $report = ['contract' => trim(file_get_contents(__DIR__ . '/../../write-contract.ref')),
     'engine' => $admin->query('SELECT VERSION()')->fetchColumn(),'php' => PHP_VERSION,
     'client' => $admin->getAttribute(PDO::ATTR_CLIENT_VERSION),
     'sharedCases' => $shared,'sharedPassed' => count($supported),'sharedTotal' => count($vectors['cases']),
+    'coreClassificationEvidence' => $classificationEvidence,
     'failureEvidence' => $failureResults,'certaintyStatesEvidence' => $certaintyEvidence,
     'layer' => 'integrated-core-mariadb','persistenceEvidence' => true,
     'adapterObligations' => $adapterObligations + ['layer' => 'sql-adapter','engine' => 'mariadb',

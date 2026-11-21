@@ -18,23 +18,25 @@ $integer = $load($options['integer']);
 $reads = $load($options['reads']);
 $contract = new Contract();
 $baseline = $load(__DIR__ . '/../docs/integer-conformance.json');
+$coreBaseline = $load(__DIR__ . '/../docs/test-001-conformance.json');
 Contract::need($core['persistenceEvidence'] === false, 'Core simulation mislabeled');
 foreach ([$core,$crud,$integer,$baseline] as $input) {
     Contract::same($input['contract'], $contract->sha, 'matrix contract revision');
 }
-$matrix = ['feature' => 'ARP-TEST-001','contract' => $contract->sha,'baseline' => '507f3e6',
-    'inventory' => 'docs/test-001-inventory.json','sourceArtifacts' => [],
+$matrix = ['feature' => 'ARP-TEST-002','contract' => $contract->sha,'baseline' => '3b7d55c',
+    'environment' => array_intersect_key($crud, array_flip(['engine','php','client'])),
+    'inventory' => 'docs/test-001-inventory.json','coreBaseline' => 'docs/test-001-conformance.json',
+    'sourceArtifacts' => [],'beforeAfter' => [],
     'layers' => ['generic' => ['persistenceEvidence' => false,'write' => [],'listGet' => []],
         'sqlAdapter' => ['mariadb' => $crud['adapterObligations']],
         'integrated' => ['persistenceEvidence' => true,'engine' => 'mariadb','write' => [],'listGet' => []]],
     'nativeRegressionEvidence' => ['groups' => $crud['nativeGroups'],
         'certaintyRegressions' => count($crud['certaintyStatesEvidence']),
         'integerAssertions' => $integer['checks'],'integerDomains' => $integer['domains'],
+        'coreClassification' => $crud['coreClassificationEvidence'],
         'readLayouts' => array_values(array_filter(array_keys($reads), static fn($k) => $k !== 'direct'))],
     'summary' => [],'limitations' => [
         'Generic port events, rollback and injected faults are simulations, never SQL persistence evidence.',
-        'Two executed core gaps remain nonconformant. Strict test:core exits 1; '
-            . 'test:core:baseline explicitly permits only those established signatures.',
         'Opaque literal tokens, partial protected receipt state, delegation, defaults and module phases '
             . 'not supported by existing ports are not counted as replay passes.',
         'The common adapter battery ran on MariaDB only. '
@@ -49,6 +51,10 @@ foreach ($sets as $kind => $path) {
     foreach ($cases as $case) {
         $id = $case->id;
         $generic = $core[$kind][$id];
+        Contract::need(!isset($generic['knownGap']), 'Core exceptions are forbidden');
+        if ($coreBaseline['layers']['generic'][$kind][$id]['executed']) {
+            Contract::need(($generic['passed'] ?? false) === true, 'Lost or nonconformant generic vector ' . $id);
+        }
         unset($generic['portEvents']);
         $matrix['layers']['generic'][$kind][$id] = $generic;
         if ($kind === 'write') {
@@ -79,11 +85,16 @@ foreach ($sets as $kind => $path) {
         $entries = $matrix['layers'][$layer][$kind];
         $executed = count(array_filter($entries, static fn($c) => $c['executed']));
         $passed = count(array_filter($entries, static fn($c) => $c['passed'] ?? false));
-        $known = count(array_filter($entries, static fn($c) => isset($c['knownGap'])));
         $matrix['summary'][$layer][$kind] = ['inventoried' => count($entries),'executed' => $executed,
-            'passed' => $passed,'knownGaps' => $known,'notExecuted' => count($entries) - $executed];
-        Contract::need($executed === $passed + $known, 'Unreported test failure in matrix');
+            'passed' => $passed,'failures' => $executed - $passed,'notExecuted' => count($entries) - $executed];
+        Contract::need($executed === $passed, 'Nonconformant vector in strict matrix');
+        $before = $coreBaseline['summary'][$layer][$kind];
+        $matrix['beforeAfter'][$layer][$kind] = ['beforePassed' => $before['passed'],'afterPassed' => $passed];
     }
+}
+Contract::same(count($crud['coreClassificationEvidence']), 4, 'Native classification regressions complete');
+foreach ($crud['coreClassificationEvidence'] as $probe) {
+    Contract::need($probe['dmlCount'] === 0 && $probe['persistedUnchanged'], 'Classification probe mutated storage');
 }
 Contract::same($crud['adapterObligations']['count'], 10, 'Common adapter battery complete');
 Contract::need($crud['adapterObligations']['persistenceEvidence'], 'Adapter obligations lack SQL evidence');
