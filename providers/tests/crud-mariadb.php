@@ -87,7 +87,11 @@ $ruleReject = false;
 $readScope = null;
 $hook = null;
 $clock = 1000.0;
-$authorizer = static function ($target, $operation, $context) use (
+$authorizer = static function (
+    $target,
+    $operation,
+    $context
+) use (
     &$allowed,
     &$writeFields,
     &$scope,
