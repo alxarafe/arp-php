@@ -166,6 +166,22 @@ and read-bound DELETE evidence. The [current matrix](docs/integer-conformance.js
 INTEGER supports signed/unsigned 8/16/32/64-bit capacities without aliases; complete CRUD conformance is not claimed.
 Run `providers/crud-docker.py` against the clean revision in `write-contract.ref` for reproducible isolated tests.
 
+## Carga inicial CSV para la demostración
+
+[ARP-SEED-001](docs/seed-001.md) añade `CsvTable` y `CsvSeedLoader` para preparar `demo.items` desde un CSV UTF-8
+con cabecera, separador configurable, campos entrecomillados y valores exactos. La prevalidación completa reutiliza
+el camino CREATE de `CrudHost` sin DML; la carga usa el CREATE gestionado existente.
+
+```bash
+export ARP_WRITE_CONTRACT_PATH=/ruta/al/arp-contract-fijado
+export ARP_DB_PASSWORD='...'
+php demo/seed/prepare.php --database=arp_seed_demo --host=127.0.0.1 --user=root
+composer test:seed
+```
+
+La preparación solo acepta bases `arp_seed_*`, crea el esquema con el SQL de ejemplo del contrato y descarta
+únicamente la base nueva ante un error. Una segunda ejecución no duplica ni borra registros.
+
 ## Separación de pruebas CRUD y SQL
 
 [ARP-TEST-002](docs/test-002.md) cierra las dos discrepancias del núcleo sin modificar el contrato neutral.
