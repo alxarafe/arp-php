@@ -44,7 +44,10 @@ else:
     raise AssertionError("Host did not become ready")
 info = json.loads(text)
 assert info["demoProtocol"] == "arp-demo-" + RUNTIME + "/1" and info["runtime"] == RUNTIME
-assert set(info["capabilities"]) == {"dictionary.list", "dictionary.describe", "dictionary.validate"}
+expected = {"dictionary.list", "dictionary.describe", "dictionary.validate"}
+if os.environ.get("ARP_DEMO_CRUD_ENABLED") == "1":
+    expected |= {"crud.metadata", "crud.invoke"}
+assert set(info["capabilities"]) == expected
 assert headers["Access-Control-Allow-Origin"] == ORIGIN
 for source in info["sources"]:
     assert source["sha256"] == hashlib.sha256((ROOT / source["path"]).read_bytes()).hexdigest()

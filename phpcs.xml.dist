@@ -10,6 +10,7 @@
     <file>providers</file>
     <file>tests</file>
     <file>demo/router.php</file>
+    <file>demo/crud.php</file>
 
     <exclude-pattern>*/vendor/*</exclude-pattern>
 

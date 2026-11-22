@@ -8,6 +8,6 @@ COPY composer.json composer.lock contract.ref ./
 RUN composer install --no-dev --no-interaction --prefer-dist --no-plugins --no-scripts
 COPY src ./src
 COPY tests ./tests
-COPY demo/router.php ./demo/router.php
+COPY demo/router.php demo/crud.php ./demo/
 COPY demo/start ./demo/start
 CMD ["sh", "/app/demo/start"]
