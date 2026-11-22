@@ -1,0 +1,132 @@
+#!/usr/bin/env python3
+"""Own isolated containers by immutable IDs; persist only a private local state file."""
+import hashlib
+import json
+import os
+from pathlib import Path
+import secrets
+import subprocess
+import sys
+import tempfile
+import time
+
+ROOT = Path(__file__).resolve().parent.parent
+STATE = Path(tempfile.gettempdir()) / ('arp-crud-' + hashlib.sha256(str(ROOT).encode()).hexdigest()[:16] + '.json')
+OWNER = str(ROOT)
+
+
+def docker(*args, **kwargs):
+    try:
+        return subprocess.check_output(['docker', *map(str, args)], text=True, **kwargs).strip()
+    except subprocess.CalledProcessError as error:
+        detail = error.output or ''
+        for arg in args:
+            if isinstance(arg, str) and ('PASSWORD=' in arg or 'TOKEN=' in arg):
+                detail = detail.replace(arg.split('=', 1)[1], '[redacted]')
+        raise RuntimeError('Docker command failed: ' + detail) from None
+
+
+def save(state):
+    STATE.write_text(json.dumps(state))
+
+
+def stop(state):
+    for key in ('app', 'db'):
+        ident = state.get(key)
+        if ident:
+            try:
+                owner = docker('inspect', '--format', '{{index .Config.Labels "arp.crud.owner"}}', ident)
+            except RuntimeError:
+                continue
+            if owner != OWNER:
+                raise RuntimeError('Refusing to remove another owner container')
+            docker('rm', '-f', '-v', ident)
+    if state.get('network'):
+        owner = docker('network', 'inspect', '--format', '{{index .Labels "arp.crud.owner"}}', state['network'])
+        if owner != OWNER:
+            raise RuntimeError('Refusing to remove another owner network')
+        docker('network', 'rm', state['network'])
+    STATE.unlink(missing_ok=True)
+
+
+def start():
+    fd = os.open(STATE, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
+    os.close(fd)
+    state = {}
+    save(state)
+    try:
+        contract = Path(os.environ.get('ARP_WRITE_CONTRACT_PATH', str(ROOT.parent / 'arp-contract'))).resolve()
+        if not (contract / 'examples/demo/cds/public.yaml').is_file():
+            raise RuntimeError('Set ARP_WRITE_CONTRACT_PATH to the write-contract.ref checkout')
+        revision = subprocess.check_output(['git', '-C', str(contract), 'rev-parse', 'HEAD'], text=True).strip()
+        if revision != (ROOT / 'write-contract.ref').read_text().strip():
+            raise RuntimeError('Contract checkout must match write-contract.ref')
+        subprocess.run(['git', '-C', str(contract), 'diff', '--quiet', 'HEAD', '--',
+                        'examples', 'fixtures', 'schemas'], check=True)
+        image = 'arp-demo-crud:local-' + hashlib.sha256(OWNER.encode()).hexdigest()[:12]
+        subprocess.run(['docker', 'build', '-f', 'demo/Dockerfile.crud', '-t', image, '.'], cwd=ROOT, check=True)
+        state['image'] = image
+        state['token'] = secrets.token_hex(32)
+        state['password'] = secrets.token_hex(32)
+        state['network'] = docker('network', 'create', '--label', 'arp.crud.owner=' + OWNER,
+                                  'arp-crud-' + secrets.token_hex(8))
+        save(state)
+        state['db'] = docker('create', '--network', state['network'], '--network-alias', 'db',
+                             '--label', 'arp.crud.owner=' + OWNER,
+                             '-e', 'MARIADB_ROOT_PASSWORD=' + state['password'], 'mariadb:12.3')
+        save(state)
+        docker('start', state['db'])
+        for _ in range(60):
+            try:
+                docker('exec', state['db'], 'healthcheck.sh', '--connect', '--innodb_initialized',
+                       stderr=subprocess.DEVNULL)
+                break
+            except RuntimeError:
+                time.sleep(1)
+        else:
+            raise RuntimeError('MariaDB readiness timeout')
+        env = ['-e', 'ARP_DB_HOST=db', '-e', 'ARP_DB_USER=root',
+               '-e', 'ARP_DB_PASSWORD=' + state['password'], '-e', 'ARP_SEED_DATABASE=arp_seed_http',
+               '-e', 'ARP_WRITE_CONTRACT_PATH=/contract', '-e', 'ARP_CONTRACT_PATH=/contract',
+               '-e', 'ARP_DEMO_CRUD_TOKEN=' + state['token'],
+               '-e', 'ARP_DEMO_ORIGIN=' + os.environ.get('ARP_DEMO_ORIGIN', 'http://127.0.0.1:4173')]
+        mount = ['--mount', f'type=bind,src={contract},dst=/contract,readonly']
+        docker('run', '--rm', '--network', state['network'], *env, *mount, image,
+               'php', 'demo/seed/prepare.php', '--database=arp_seed_http')
+        state['app'] = docker('create', '--network', state['network'], '--label', 'arp.crud.owner=' + OWNER,
+                              '-p', '127.0.0.1:' + os.environ.get('ARP_DEMO_PORT', '5300') + ':8080',
+                              *env, *mount, image, 'php', '-d', 'display_errors=0',
+                              '-d', 'post_max_size=0', '-S', '0.0.0.0:8080', '-t', 'demo', 'demo/router.php')
+        save(state)
+        docker('start', state['app'])
+        published = docker('port', state['app'], '8080/tcp')
+        if published != '127.0.0.1:' + os.environ.get('ARP_DEMO_PORT', '5300'):
+            raise RuntimeError('HTTP must be published exclusively on loopback')
+        if docker('port', state['db']):
+            raise RuntimeError('MariaDB must not publish ports')
+        print('HTTP: http://127.0.0.1:' + os.environ.get('ARP_DEMO_PORT', '5300'))
+        print('Private token/state file: ' + str(STATE))
+    except BaseException:
+        stop(state)
+        raise
+
+
+if __name__ == '__main__':
+    action = sys.argv[1] if len(sys.argv) == 2 else ''
+    if action == 'start':
+        start()
+    elif action == 'stop':
+        if STATE.exists():
+            stop(json.loads(STATE.read_text()))
+    elif action == 'check':
+        start()
+        try:
+            env = dict(os.environ, ARP_DEMO_CRUD_TOKEN=json.loads(STATE.read_text())['token'])
+            subprocess.run([sys.executable, str(ROOT / 'demo/check-crud-http.py')], env=env, check=True)
+            env.update(ARP_DEMO_CRUD_ENABLED='1', ARP_CONTRACT_PATH=os.environ.get(
+                'ARP_WRITE_CONTRACT_PATH', str(ROOT.parent / 'arp-contract')))
+            subprocess.run([sys.executable, str(ROOT / 'demo/check-http.py')], env=env, check=True)
+        finally:
+            stop(json.loads(STATE.read_text()))
+    else:
+        sys.exit('Usage: demo/crud-run {start|stop|check}')

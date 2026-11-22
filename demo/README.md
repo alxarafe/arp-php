@@ -133,3 +133,7 @@ of all server-generated headers/errors. No retries, heartbeat or mandatory HTTP 
 Labels are cooperative ownership markers, not protection against an actor controlling Docker. Cleanup needs an
 available daemon; SIGKILL/daemon failure may prevent it. INT/TERM handlers exist but signals were not separately
 exercised. Ports are configurable; the script never takes over an occupied port.
+
+## CRUD PHP/MariaDB
+
+Para el CRUD HTTP real, sus garantías de concurrencia y el arranque aislado, consultar [CRUD.md](CRUD.md).

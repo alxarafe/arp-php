@@ -38,7 +38,7 @@ start() {
 case "${1:-}" in
     build)
         tar -C "$root" -cf - \
-            composer.json composer.lock contract.ref src tests demo/Dockerfile demo/router.php demo/start \
+            composer.json composer.lock contract.ref src tests demo/Dockerfile demo/router.php demo/crud.php demo/start \
             | docker build -t "$image" -f demo/Dockerfile -
         ;;
     start)

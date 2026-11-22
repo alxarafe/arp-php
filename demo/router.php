@@ -10,7 +10,7 @@ require dirname(__DIR__) . '/vendor/autoload.php';
 // Demo transport only. The library and its input/normalization rules remain unchanged.
 function output(int $status, mixed $body, bool $raw = false): void
 {
-    $json = $raw ? $body : json_encode($body, JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE);
+    $json = $raw ? $body : \Alxarafe\Arp\Dictionary\Internal\Projection::encode($body);
     http_response_code($status);
     header('Content-Type: application/json; charset=utf-8');
     echo $json;
@@ -92,7 +92,7 @@ try {
     if ($method === 'OPTIONS' && $supplied !== null && isset($_SERVER['HTTP_ACCESS_CONTROL_REQUEST_METHOD'])) {
         if ($allowed) {
             header('Access-Control-Allow-Methods: GET,POST');
-            header('Access-Control-Allow-Headers: Content-Type');
+            header('Access-Control-Allow-Headers: Content-Type, Authorization');
         }
         http_response_code(204);
         return;
@@ -102,6 +102,11 @@ try {
         return;
     }
     $path = rawurldecode(explode('?', $_SERVER['REQUEST_URI'], 2)[0]);
+    if (str_starts_with($path, '/demo/crud/')) {
+        require __DIR__ . '/crud.php';
+        crudRoute($path, $method, $allowed);
+        return;
+    }
     $known = $path === '/demo/info' || $path === '/demo/dictionary/elements';
     $match = [];
     $element = preg_match('~^/demo/dictionary/elements/([^/]+)(/validate)?$~D', $path, $match) === 1;
@@ -117,7 +122,9 @@ try {
     if ($path === '/demo/info') {
         output(200, ['demoProtocol' => 'arp-demo-php/1', 'runtime' => 'php',
             'libraryContractRef' => trim(file_get_contents(dirname(__DIR__) . '/contract.ref')),
-            'capabilities' => ['dictionary.list', 'dictionary.describe', 'dictionary.validate'], 'sources' => $hashes]);
+            'capabilities' => ['dictionary.list', 'dictionary.describe', 'dictionary.validate',
+                ...(strlen(getenv('ARP_DEMO_CRUD_TOKEN') ?: '') >= 32 ? ['crud.metadata', 'crud.invoke'] : [])],
+            'sources' => $hashes]);
     } elseif ($path === '/demo/dictionary/elements') {
         $elements = [];
         foreach ($catalog->ids() as $id) {
