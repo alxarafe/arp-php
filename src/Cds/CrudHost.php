@@ -115,6 +115,18 @@ final class CrudHost
             return (new WriteFailure('PERSISTENCE_FAILED', 'execution-failure', 'failed'))->response();
         }
     }
+    /** Replays the complete CREATE validation without DML; the transaction is rolled back. */
+    public function validateCreate(string $target, object $values, array $context): array
+    {
+        try {
+            return $this->execute((object)['target' => $target,'operation' => 'CREATE',
+                'inputs' => (object)['values' => $values]], $context, 'validate-create');
+        } catch (WriteFailure $e) {
+            return $e->response();
+        } catch (\Throwable) {
+            return (new WriteFailure('PERSISTENCE_FAILED', 'execution-failure', 'failed'))->response();
+        }
+    }
     /** Separate capability: returns a fresh authorized record plus protected DELETE evidence, never changes GET. */
     public function readForDelete(string $target, object $key, array $context): array
     {
@@ -277,7 +289,10 @@ final class CrudHost
         }
         $binding = serialize([$target,$registration['projection'],$publicKey,$context,$generation,$epoch,$access]);
         $readAccess = null;
-        if ($purpose !== 'invoke' || $op === 'DELETE' || isset($inputs->confirmation)) {
+        if (
+            ($purpose !== 'invoke' && $purpose !== 'validate-create')
+            || $op === 'DELETE' || isset($inputs->confirmation)
+        ) {
             WriteFailure::need(in_array('GET', $projection->operations, true)
                 && in_array('GET', $registration['operations'], true), 'UNAVAILABLE');
             $readAccess = $this->access($target, 'GET', $context);
@@ -370,6 +385,9 @@ final class CrudHost
                         self::scope($candidate, $access['equalities']);
                         $this->rule($op, $candidate, $context, array_keys($candidate));
                         $current();
+                        if ($purpose === 'validate-create') {
+                            return ['validated' => true];
+                        }
                         $tx->insert($candidate);
                         $components = [];
                         foreach ($model->physical->primaryKey as $name) {
@@ -455,6 +473,9 @@ final class CrudHost
                 }
             }
             throw $error;
+        }
+        if ($purpose === 'validate-create') {
+            return ['status' => 'success','diagnostics' => [],'output' => ['valid' => true]];
         }
         if ($purpose !== 'invoke') {
             WriteFailure::need($this->access($target, 'GET', $context) == $readAccess, 'UNAVAILABLE');

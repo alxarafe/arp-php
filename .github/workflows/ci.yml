@@ -110,6 +110,8 @@ jobs:
         run: php providers/tests/crud-mariadb.php
       - name: Exact INTEGER, unsigned 64-bit CRUD and cursor evidence
         run: php providers/tests/integer-mariadb.php
+      - name: CSV seed intake, exact values, repeatability and isolation
+        run: php providers/tests/seed-mariadb.php
       - name: Conformance matrix
         run: |
           cat crud-mariadb-report.json

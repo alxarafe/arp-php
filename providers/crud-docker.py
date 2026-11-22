@@ -58,7 +58,8 @@ def main():
                "CREATE TABLE __arp_crud_test_owner(token varchar(64)); INSERT INTO __arp_crud_test_owner VALUES ('"
                + token + "')")
         for phase, script in [('native', 'providers/tests/crud-mariadb.php'),
-                              ('integer', 'providers/tests/integer-mariadb.php')]:
+                              ('integer', 'providers/tests/integer-mariadb.php'),
+                              ('seed', 'providers/tests/seed-mariadb.php')]:
             container = docker('create', '--label', label + '=' + token, '--network', network,
                                '--user', f'{os.getuid()}:{os.getgid()}',
                                '--mount', f'type=bind,src={source},dst=/app,readonly',
